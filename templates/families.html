@@ -279,7 +279,7 @@
             <div class="filter-box">
                 <span class="filter-label">📌 અટક પ્રમાણે ({{ surnames|length }}):</span>
                 <div class="surname-filters" id="surnameFilters">
-                    <a href="/families{% if search %}?search={{ search }}{% endif %}" class="surname-btn {% if not current_surname %}active{% endif %}">બધા</a>
+                    <a href="/families" class="surname-btn {% if not current_surname %}active{% endif %}">બધા</a>
                     {% for s in surnames %}
                     <a href="/families?surname={{ s.name }}{% if search %}&search={{ search }}{% endif %}" class="surname-btn {% if current_surname == s.name %}active{% endif %}">
                         {{ s.name }}<span class="count">({{ s.count }})</span>
