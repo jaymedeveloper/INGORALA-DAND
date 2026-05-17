@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>પરિવારો - ઈંગોરાળા</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:Arial;background:#f0f2f5;padding:0;margin:0;height:100vh;display:flex;flex-direction:column;}
+        
+        .container{
+            max-width:600px;
+            margin:0 auto;
+            background:white;
+            height:100vh;
+            display:flex;
+            flex-direction:column;
+            box-shadow:0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .fixed-header{
+            flex-shrink:0;
+            background:white;
+            border-bottom:1px solid #eee;
+        }
+        
+        .header{
+            background:#1e6f2f;
+            color:white;
+            padding:12px 16px;
+            text-align:center;
+            position:relative;
+        }
+        
+        .back-btn{
+            position:absolute;
+            left:12px;
+            top:12px;
+            color:white;
+            text-decoration:none;
+            background:rgba(0,0,0,0.2);
+            padding:4px 12px;
+            border-radius:20px;
+            font-size:14px;
+        }
+        
+        .header h2{
+            font-size:18px;
+        }
+        
+        .search-box{
+            padding:12px 12px;
+            background:white;
+            border-bottom:1px solid #eee;
+        }
+        
+        .search-wrapper{
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        
+        .search-box input{
+            flex:1;
+            padding:10px 14px;
+            font-size:14px;
+            border:1px solid #ddd;
+            border-radius:25px;
+            outline:none;
+            padding-left:15px;
+        }
+        
+        .search-box input:focus{
+            border-color:#1e6f2f;
+        }
+        
+        .search-btn{
+            background:#1e6f2f;
+            color:white;
+            border:none;
+            padding:8px 16px;
+            border-radius:25px;
+            font-size:14px;
+            cursor:pointer;
+            font-weight:bold;
+        }
+        
+        .filter-box{
+            padding:8px 12px;
+            background:#f8f9fa;
+            border-bottom:1px solid #eee;
+        }
+        
+        .filter-label{
+            font-size:11px;
+            color:#666;
+            margin-bottom:5px;
+            display:block;
+            font-weight:bold;
+        }
+        
+        .surname-filters{
+            display:flex;
+            flex-wrap:wrap;
+            gap:5px;
+            max-height:80px;
+            overflow:hidden;
+            transition:max-height 0.3s ease;
+        }
+        
+        .surname-filters.expanded{
+            max-height:300px;
+        }
+        
+        .surname-btn{
+            background:#e9ecef;
+            padding:4px 10px;
+            border-radius:20px;
+            text-decoration:none;
+            color:#333;
+            font-size:11px;
+            transition:all 0.2s;
+        }
+        
+        .surname-btn.active{
+            background:#1e6f2f;
+            color:white;
+        }
+        
+        .surname-btn .count{
+            font-size:10px;
+            margin-left:2px;
+        }
+        
+        .show-more-btn{
+            background:none;
+            border:none;
+            color:#1e6f2f;
+            font-size:11px;
+            margin-top:5px;
+            cursor:pointer;
+            font-weight:bold;
+        }
+        
+        .selected-header{
+            background:#e8f5e9;
+            padding:6px 12px;
+            margin:0;
+            text-align:center;
+            border-bottom:1px solid #d0e8d0;
+        }
+        
+        .selected-header h3{
+            color:#1e6f2f;
+            font-size:13px;
+        }
+        
+        .selected-header .total{
+            font-size:16px;
+            font-weight:bold;
+        }
+        
+        .clear-search{
+            display:inline-block;
+            margin-top:5px;
+            color:#1e6f2f;
+            text-decoration:none;
+            font-size:11px;
+            text-align:center;
+        }
+        
+        .family-list{
+            flex:1;
+            overflow-y:auto;
+            padding:4px 0 10px 0;
+            min-height:0;
+        }
+        
+        .family-card{
+            display:block;
+            background:white;
+            margin:4px 12px;
+            padding:8px 12px;
+            border-radius:10px;
+            text-decoration:none;
+            color:#333;
+            box-shadow:0 1px 2px rgba(0,0,0,0.08);
+            border-left:3px solid #ff9800;
+            transition:background 0.1s;
+        }
+        
+        .family-card:active{
+            background:#f5f5f5;
+        }
+        
+        .family-surname{
+            display:inline-block;
+            background:#1e6f2f;
+            color:white;
+            padding:2px 8px;
+            border-radius:12px;
+            font-size:10px;
+            margin-bottom:4px;
+        }
+        
+        .family-card h3{
+            color:#1e6f2f;
+            margin-bottom:4px;
+            font-size:15px;
+            font-weight:600;
+        }
+        
+        .family-card p{
+            margin:2px 0;
+            color:#666;
+            font-size:11px;
+            line-height:1.3;
+        }
+        
+        .family-list::-webkit-scrollbar{
+            width:3px;
+        }
+        
+        .family-list::-webkit-scrollbar-track{
+            background:#f1f1f1;
+        }
+        
+        .family-list::-webkit-scrollbar-thumb{
+            background:#1e6f2f;
+            border-radius:3px;
+        }
+        
+        .no-data{
+            text-align:center;
+            padding:30px;
+            color:#999;
+            font-size:13px;
+        }
+        
+        .footer{
+            flex-shrink:0;
+            background:#1a472a;
+            color:white;
+            text-align:center;
+            padding:8px;
+            font-size:11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="fixed-header">
+            <div class="header">
+                <a href="/" class="back-btn">←</a>
+                <h2>👨‍👩‍👧‍👦 ઈંગોરાળાના પરિવારો</h2>
+            </div>
+            
+            <div class="search-box">
+                <form method="GET" id="searchForm">
+                    {% if current_surname %}
+                    <input type="hidden" name="surname" value="{{ current_surname }}">
+                    {% endif %}
+                    <div class="search-wrapper">
+                        <input type="text" name="search" id="searchInput" 
+                               placeholder="🔍 મુખ્ય વ્યક્તિનું નામ શોધો..." 
+                               value="{{ search or '' }}">
+                        <button type="submit" class="search-btn">શોધો</button>
+                    </div>
+                </form>
+                {% if search %}
+                <div style="text-align:center; margin-top:5px;">
+                    <a href="/families{% if current_surname %}?surname={{ current_surname }}{% endif %}" class="clear-search">
+                        ✖️ "{{ search }}" સાફ કરો
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="filter-box">
+                <span class="filter-label">📌 અટક પ્રમાણે ({{ surnames|length }}):</span>
+                <div class="surname-filters" id="surnameFilters">
+                    <a href="/families{% if search %}?search={{ search }}{% endif %}" class="surname-btn {% if not current_surname %}active{% endif %}">બધા</a>
+                    {% for s in surnames %}
+                    <a href="/families?surname={{ s.name }}{% if search %}&search={{ search }}{% endif %}" class="surname-btn {% if current_surname == s.name %}active{% endif %}">
+                        {{ s.name }}<span class="count">({{ s.count }})</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% if surnames|length > 15 %}
+                <button class="show-more-btn" id="showMoreBtn" onclick="toggleSurnames()">👇 વધુ બતાવો</button>
+                {% endif %}
+            </div>
+            
+            {% if current_surname %}
+            <div class="selected-header">
+                <h3>🏷️ {{ current_surname }} - {{ families|length }} પરિવારો</h3>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="family-list">
+            {% for family in families %}
+            <a href="/family/{{ family.id }}" class="family-card">
+                <span class="family-surname">{{ family.surname }}</span>
+                <h3>{{ family.head_name }}</h3>
+                <p>👥 {{ family.members_count }} સભ્યો | 📞 {{ family.contact or '-' }}</p>
+                <p>📍 {{ family.address|truncate(35) or '-' }}</p>
+            </a>
+            {% else %}
+            <div class="no-data">
+                ❌ "{{ search }}" માટે કોઈ પરિવાર નથી
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="footer">
+            {% if current_surname %}
+            {{ current_surname }} અટકના {{ families|length }} પરિવારો
+            {% else %}
+            કુલ {{ families|length }} પરિવારો
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        function toggleSurnames() {
+            const container = document.getElementById('surnameFilters');
+            const btn = document.getElementById('showMoreBtn');
+            
+            if(container.classList.contains('expanded')) {
+                container.classList.remove('expanded');
+                btn.innerHTML = '👇 વધુ બતાવો';
+            } else {
+                container.classList.add('expanded');
+                btn.innerHTML = '👆 ઓછા બતાવો';
+            }
+        }
+        
+        const searchInput = document.getElementById('searchInput');
+        if(searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if(e.key === 'Enter') {
+                    document.getElementById('searchForm').submit();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
