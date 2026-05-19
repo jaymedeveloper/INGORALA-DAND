@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import json
 import os
 from dotenv import load_dotenv
@@ -9,6 +9,14 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'ingorala_village_secret_key_2024'
+
+# ========== SESSION CONFIGURATION - 30 DAYS ==========
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # 👈 30 days session
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Refresh session on each request
 
 # ========== DATABASE CONFIGURATION ==========
 DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://neondb_owner:npg_sOe3yinBHG5k@ep-polished-truth-apa48k4z-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require')
@@ -23,7 +31,22 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 db = SQLAlchemy(app)
 
+# ========== HELPER FUNCTION ==========
+def calculate_age(born):
+    if born:
+        today = date.today()
+        return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+    return None
+
 # ========== DATABASE MODELS ==========
+
+class Admin(db.Model):
+    __tablename__ = 'admins'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    mobile = db.Column(db.String(15), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Family(db.Model):
     __tablename__ = 'families'
@@ -35,19 +58,28 @@ class Family(db.Model):
     address = db.Column(db.String(200))
     photo = db.Column(db.String(300))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    admin_id = db.Column(db.Integer, db.ForeignKey('admins.id', ondelete='SET NULL'))
     
     members = db.relationship('Member', backref='family', lazy=True, cascade='all, delete-orphan')
+    admin = db.relationship('Admin', backref='families')
 
 class Member(db.Model):
     __tablename__ = 'members'
     id = db.Column(db.Integer, primary_key=True)
     family_id = db.Column(db.Integer, db.ForeignKey('families.id', ondelete='CASCADE'))
     name = db.Column(db.String(100), nullable=False)
-    age = db.Column(db.Integer)
+    dob = db.Column(db.Date)
     relation = db.Column(db.String(50))
     work = db.Column(db.String(100))
     contact = db.Column(db.String(15))
     gender = db.Column(db.String(10))
+
+    @property
+    def age(self):
+        if self.dob:
+            today = date.today()
+            return today.year - self.dob.year - ((today.month, today.day) < (self.dob.month, self.dob.day))
+        return None
 
 class Business(db.Model):
     __tablename__ = 'businesses'
@@ -74,12 +106,22 @@ class Notice(db.Model):
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text)
     date = db.Column(db.DateTime, default=datetime.utcnow)
+    admin_id = db.Column(db.Integer, db.ForeignKey('admins.id', ondelete='SET NULL'))
+    admin_name = db.Column(db.String(100))
+    
+    admin = db.relationship('Admin', backref='notices')
+
+class Work(db.Model):
+    __tablename__ = 'works'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ========== ROUTES - PUBLIC ==========
 
 @app.route('/')
 def index():
-    notices = Notice.query.order_by(Notice.date.desc()).limit(3).all()
+    notices = Notice.query.order_by(Notice.date.desc()).limit(5).all()
     total_families = Family.query.count()
     total_businesses = Business.query.count()
     total_members = Member.query.count()
@@ -149,161 +191,6 @@ def gallery():
     categories = ['મંદિર', 'તળાવ', 'શાળા', 'ખેતી', 'સમારોહ', 'અન્ય']
     return render_template('gallery.html', images=images, categories=categories)
 
-# ========== ADMIN ROUTES ==========
-
-@app.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    if request.method == 'POST':
-        if request.form.get('password') == 'ingorala@2024':
-            session['admin'] = True
-            return redirect('/admin/dashboard')
-        else:
-            return render_template('admin_login.html', error='પાસવર્ડ ખોટો છે!')
-    return render_template('admin_login.html')
-
-@app.route('/admin/logout')
-def admin_logout():
-    session.pop('admin', None)
-    return redirect('/')
-
-@app.route('/admin/dashboard')
-def admin_dashboard():
-    if not session.get('admin'):
-        return redirect('/admin/login')
-    
-    families = Family.query.order_by(Family.surname, Family.created_at.desc()).limit(10).all()
-    businesses = Business.query.order_by(Business.id.desc()).limit(5).all()
-    
-    total_families = Family.query.count()
-    total_members = Member.query.count()
-    total_businesses = Business.query.count()
-    
-    surname_stats = db.session.query(
-        Family.surname, 
-        db.func.count(Family.id).label('count')
-    ).group_by(Family.surname).order_by(db.func.count(Family.id).desc()).all()
-    
-    return render_template('admin_dashboard.html', 
-                         families=families,
-                         businesses=businesses,
-                         total_families=total_families,
-                         total_members=total_members,
-                         total_businesses=total_businesses,
-                         surname_stats=surname_stats)
-
-@app.route('/admin/add_family', methods=['POST'])
-def add_family():
-    if not session.get('admin'):
-        return "Unauthorized", 401
-    
-    try:
-        surname_raw = request.form.get('surname', '')
-        surname_clean = surname_raw.strip()
-        surname_clean = ' '.join(surname_clean.split())
-        
-        family = Family(
-            surname=surname_clean,
-            head_name=request.form.get('head_name'),
-            members_count=int(request.form.get('members_count', 1)),
-            contact=request.form.get('contact'),
-            address=request.form.get('address')
-        )
-        db.session.add(family)
-        db.session.flush()
-        
-        members_data = request.form.get('members_data', '[]')
-        members = json.loads(members_data)
-        
-        for member in members:
-            # Safe age conversion
-            age_value = member.get('age')
-            if age_value and str(age_value).strip():
-                try:
-                    age_int = int(str(age_value).strip())
-                except ValueError:
-                    age_int = None
-            else:
-                age_int = None
-            
-            new_member = Member(
-                family_id=family.id,
-                name=member.get('name'),
-                age=age_int,
-                contact=member.get('contact'),
-                gender=member.get('gender'),
-                relation=member.get('relation'),
-                work=member.get('work')
-            )
-            db.session.add(new_member)
-        
-        family.members_count = len(members)
-        db.session.commit()
-        return redirect('/admin/dashboard')
-    
-    except Exception as e:
-        db.session.rollback()
-        return f"Error: {str(e)}", 500
-
-@app.route('/admin/delete_family/<int:id>')
-def delete_family(id):
-    if not session.get('admin'):
-        return redirect('/admin/login')
-    
-    family = Family.query.get_or_404(id)
-    db.session.delete(family)
-    db.session.commit()
-    return redirect('/admin/dashboard')
-
-@app.route('/admin/add_business', methods=['POST'])
-def add_business():
-    if not session.get('admin'):
-        return "Unauthorized", 401
-    
-    try:
-        business = Business(
-            name=request.form.get('name'),
-            owner=request.form.get('owner'),
-            type=request.form.get('type'),
-            contact=request.form.get('contact'),
-            address=request.form.get('address'),
-            timings=request.form.get('timings')
-        )
-        db.session.add(business)
-        db.session.commit()
-        return redirect('/admin/dashboard')
-    except Exception as e:
-        db.session.rollback()
-        return f"Error: {str(e)}", 500
-
-@app.route('/admin/delete_business/<int:id>')
-def delete_business(id):
-    if not session.get('admin'):
-        return redirect('/admin/login')
-    
-    business = Business.query.get_or_404(id)
-    db.session.delete(business)
-    db.session.commit()
-    return redirect('/admin/dashboard')
-
-@app.route('/admin/add_notice', methods=['POST'])
-def add_notice():
-    if not session.get('admin'):
-        return "Unauthorized", 401
-    
-    try:
-        notice = Notice(
-            title=request.form.get('title'),
-            content=request.form.get('content')
-        )
-        db.session.add(notice)
-        db.session.commit()
-        return redirect('/admin/dashboard')
-    except Exception as e:
-        db.session.commit()
-        return f"Error: {str(e)}", 500
-
-# ========== WORK (વ્યવસાય) BASED FILTER ==========
-
 @app.route('/works')
 def works():
     works_with_count = db.session.query(
@@ -326,6 +213,7 @@ def work_detail(work_name):
         people_data.append({
             'id': member.id,
             'name': member.name,
+            'dob': member.dob,
             'age': member.age,
             'contact': member.contact,
             'family_id': member.family_id,
@@ -334,6 +222,395 @@ def work_detail(work_name):
         })
     
     return render_template('work_detail.html', work=work_name, people=people_data, total=len(people_data))
+
+# ========== ADMIN AUTH ROUTES ==========
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if session.get('admin_id'):
+            return redirect('/admin/dashboard')
+    # Clear any existing session on GET request
+    if request.method == 'GET':
+        session.clear()
+    
+    if request.method == 'POST':
+        mobile = request.form.get('mobile')
+        password = request.form.get('password')
+        
+        admin = Admin.query.filter_by(mobile=mobile).first()
+        if admin and admin.password == password:
+            # Clear session before setting new
+            session.clear()
+            session.permanent = True  # 👈 This enables 30 days session
+            session['admin_id'] = admin.id
+            session['admin_name'] = admin.name
+            session['admin_mobile'] = admin.mobile
+            return redirect('/admin/dashboard')
+        else:
+            return render_template('admin_login.html', error='મોબાઇલ નંબર અથવા પાસવર્ડ ખોટો છે!')
+    return render_template('admin_login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.clear()
+    return redirect('/')
+
+# ========== SESSION CHECK MIDDLEWARE ==========
+@app.before_request
+def check_session():
+    # Skip these routes (public pages)
+    public_routes = ['admin_login', 'static', 'index', 'families', 'family_detail', 
+                     'businesses', 'gallery', 'works', 'work_detail']
+    
+    if request.endpoint in public_routes:
+        return None
+    
+    # For admin routes, check session
+    if request.endpoint and request.endpoint.startswith('admin') and request.endpoint != 'admin_login':
+        if not session.get('admin_id'):
+            return redirect('/admin/login')
+        # Refresh session on each request to keep it alive
+        session.permanent = True
+    
+    # For superadmin routes, check session and super admin status
+    if request.endpoint and request.endpoint.startswith('superadmin'):
+        if not session.get('admin_id'):
+            return redirect('/admin/login')
+        
+        admin = Admin.query.get(session.get('admin_id'))
+        if not admin or admin.mobile != 'admin':
+            return "Unauthorized: Only Super Admin can access this page", 401
+    
+    return None
+
+# ========== SUPER ADMIN ROUTES ==========
+
+@app.route('/superadmin/admins')
+def superadmin_admins():
+    admins = Admin.query.all()
+    return render_template('superadmin_admins.html', admins=admins)
+
+@app.route('/superadmin/add_admin', methods=['POST'])
+def superadmin_add_admin():
+    try:
+        new_admin = Admin(
+            name=request.form.get('name'),
+            mobile=request.form.get('mobile'),
+            password=request.form.get('password')
+        )
+        db.session.add(new_admin)
+        db.session.commit()
+        return redirect('/superadmin/admins')
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
+
+@app.route('/superadmin/delete_admin/<int:id>')
+def superadmin_delete_admin(id):
+    admin_to_delete = Admin.query.get(id)
+    if admin_to_delete.mobile == 'admin':
+        return "Cannot delete Super Admin", 400
+    
+    db.session.delete(admin_to_delete)
+    db.session.commit()
+    return redirect('/superadmin/admins')
+
+@app.route('/superadmin/businesses')
+def superadmin_businesses():
+    businesses = Business.query.order_by(Business.id.desc()).all()
+    return render_template('superadmin_businesses.html', businesses=businesses)
+
+@app.route('/superadmin/add_business', methods=['POST'])
+def superadmin_add_business():
+    try:
+        business = Business(
+            name=request.form.get('name'),
+            owner=request.form.get('owner'),
+            type=request.form.get('type'),
+            contact=request.form.get('contact'),
+            address=request.form.get('address'),
+            timings=request.form.get('timings')
+        )
+        db.session.add(business)
+        db.session.commit()
+        return redirect('/superadmin/businesses')
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
+
+@app.route('/superadmin/edit_business/<int:id>', methods=['GET', 'POST'])
+def superadmin_edit_business(id):
+    business = Business.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        try:
+            business.name = request.form.get('name')
+            business.owner = request.form.get('owner')
+            business.type = request.form.get('type')
+            business.contact = request.form.get('contact')
+            business.address = request.form.get('address')
+            business.timings = request.form.get('timings')
+            db.session.commit()
+            return redirect('/superadmin/businesses')
+        except Exception as e:
+            db.session.rollback()
+            return f"Error: {str(e)}", 500
+    
+    return render_template('superadmin_edit_business.html', business=business)
+
+@app.route('/superadmin/delete_business/<int:id>')
+def superadmin_delete_business(id):
+    business = Business.query.get_or_404(id)
+    db.session.delete(business)
+    db.session.commit()
+    return redirect('/superadmin/businesses')
+
+@app.route('/superadmin/works')
+def superadmin_works():
+    works = Work.query.order_by(Work.name).all()
+    return render_template('superadmin_works.html', works=works)
+
+@app.route('/superadmin/add_work', methods=['POST'])
+def superadmin_add_work():
+    try:
+        work_name = request.form.get('name').strip()
+        if work_name:
+            existing = Work.query.filter_by(name=work_name).first()
+            if not existing:
+                new_work = Work(name=work_name)
+                db.session.add(new_work)
+                db.session.commit()
+        return redirect('/superadmin/works')
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
+
+@app.route('/superadmin/delete_work/<int:id>')
+def superadmin_delete_work(id):
+    work = Work.query.get_or_404(id)
+    db.session.delete(work)
+    db.session.commit()
+    return redirect('/superadmin/works')
+
+# ========== REGULAR ADMIN DASHBOARD ==========
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    admin_id = session.get('admin_id')
+    admin_name = session.get('admin_name')
+    admin_mobile = session.get('admin_mobile')
+    
+    families = Family.query.filter_by(admin_id=admin_id).order_by(Family.created_at.desc()).all()
+    notices = Notice.query.order_by(Notice.date.desc()).limit(20).all()
+    works = Work.query.order_by(Work.name).all()
+    
+    total_families = len(families)
+    total_members = Member.query.join(Family).filter(Family.admin_id == admin_id).count()
+    total_businesses = Business.query.count()
+    
+    return render_template('admin_dashboard.html', 
+                         families=families,
+                         notices=notices,
+                         works=works,
+                         total_families=total_families,
+                         total_members=total_members,
+                         total_businesses=total_businesses,
+                         admin_name=admin_name,
+                         admin_mobile=admin_mobile)
+
+@app.route('/admin/add_family', methods=['POST'])
+def add_family():
+    if not session.get('admin_id'):
+        return "Unauthorized", 401
+    
+    try:
+        surname_raw = request.form.get('surname', '')
+        surname_clean = surname_raw.strip()
+        surname_clean = ' '.join(surname_clean.split())
+        
+        family = Family(
+            surname=surname_clean,
+            head_name=request.form.get('head_name'),
+            members_count=int(request.form.get('members_count', 1)),
+            contact=request.form.get('contact'),
+            address=request.form.get('address'),
+            admin_id=session['admin_id']
+        )
+        db.session.add(family)
+        db.session.flush()
+        
+        members_data = request.form.get('members_data', '[]')
+        members = json.loads(members_data)
+        
+        for member in members:
+            dob_value = member.get('dob')
+            dob_date = None
+            if dob_value and dob_value.strip():
+                try:
+                    dob_date = datetime.strptime(dob_value.strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    dob_date = None
+            
+            new_member = Member(
+                family_id=family.id,
+                name=member.get('name'),
+                dob=dob_date,
+                contact=member.get('contact'),
+                gender=member.get('gender'),
+                relation=member.get('relation'),
+                work=member.get('work')
+            )
+            db.session.add(new_member)
+        
+        family.members_count = len(members)
+        db.session.commit()
+        return redirect('/admin/dashboard')
+    
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
+
+@app.route('/admin/edit_family/<int:id>', methods=['GET', 'POST'])
+def edit_family(id):
+    family = Family.query.get_or_404(id)
+    
+    if family.admin_id != session.get('admin_id'):
+        return "તમે આ પરિવારમાં ફેરફાર કરી શકતા નથી.", 403
+    
+    if request.method == 'POST':
+        try:
+            family.surname = request.form.get('surname')
+            family.head_name = request.form.get('head_name')
+            family.contact = request.form.get('contact')
+            family.address = request.form.get('address')
+            db.session.commit()
+            return redirect('/admin/dashboard')
+        except Exception as e:
+            db.session.rollback()
+            return f"Error: {str(e)}", 500
+    
+    members = Member.query.filter_by(family_id=id).all()
+    works = Work.query.order_by(Work.name).all()
+    return render_template('edit_family.html', family=family, members=members, works=works)
+
+@app.route('/admin/delete_family/<int:id>')
+def delete_family(id):
+    family = Family.query.get_or_404(id)
+    
+    if family.admin_id != session.get('admin_id'):
+        return "તમે આ પરિવારને ડિલીટ કરી શકતા નથી.", 403
+    
+    db.session.delete(family)
+    db.session.commit()
+    return redirect('/admin/dashboard')
+
+# ========== MEMBER MANAGEMENT ROUTES ==========
+
+@app.route('/admin/add_member/<int:family_id>', methods=['POST'])
+def add_member(family_id):
+    family = Family.query.get_or_404(family_id)
+    if family.admin_id != session.get('admin_id'):
+        return "Unauthorized", 403
+    
+    try:
+        dob_value = request.form.get('dob')
+        dob_date = None
+        if dob_value and dob_value.strip():
+            try:
+                dob_date = datetime.strptime(dob_value.strip(), '%Y-%m-%d').date()
+            except ValueError:
+                dob_date = None
+        
+        work = request.form.get('work')
+        if work == 'અન્ય':
+            work = request.form.get('work_other')
+        
+        new_member = Member(
+            family_id=family_id,
+            name=request.form.get('name'),
+            dob=dob_date,
+            contact=request.form.get('contact'),
+            gender=request.form.get('gender'),
+            relation=request.form.get('relation'),
+            work=work
+        )
+        db.session.add(new_member)
+        
+        family.members_count = Member.query.filter_by(family_id=family_id).count()
+        db.session.commit()
+        return redirect(f'/admin/edit_family/{family_id}')
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
+
+@app.route('/admin/edit_member/<int:member_id>', methods=['POST'])
+def edit_member(member_id):
+    member = Member.query.get_or_404(member_id)
+    family = Family.query.get(member.family_id)
+    
+    if family.admin_id != session.get('admin_id'):
+        return "Unauthorized", 403
+    
+    try:
+        member.name = request.form.get('name')
+        member.relation = request.form.get('relation')
+        member.contact = request.form.get('contact')
+        member.gender = request.form.get('gender')
+        
+        work = request.form.get('work')
+        if work == 'અન્ય':
+            work = request.form.get('work_other')
+        member.work = work
+        
+        dob_value = request.form.get('dob')
+        if dob_value and dob_value.strip():
+            try:
+                member.dob = datetime.strptime(dob_value.strip(), '%Y-%m-%d').date()
+            except ValueError:
+                member.dob = None
+        else:
+            member.dob = None
+        
+        db.session.commit()
+        return redirect(f'/admin/edit_family/{family.id}')
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
+
+@app.route('/admin/delete_member/<int:member_id>')
+def delete_member(member_id):
+    member = Member.query.get_or_404(member_id)
+    family = Family.query.get(member.family_id)
+    
+    if family.admin_id != session.get('admin_id'):
+        return "Unauthorized", 403
+    
+    family_id = family.id
+    db.session.delete(member)
+    
+    family.members_count = Member.query.filter_by(family_id=family_id).count()
+    db.session.commit()
+    
+    return redirect(f'/admin/edit_family/{family_id}')
+
+@app.route('/admin/add_notice', methods=['POST'])
+def add_notice():
+    if not session.get('admin_id'):
+        return "Unauthorized", 401
+    
+    try:
+        notice = Notice(
+            title=request.form.get('title'),
+            content=request.form.get('content'),
+            admin_id=session['admin_id'],
+            admin_name=session.get('admin_name', 'Unknown Admin')
+        )
+        db.session.add(notice)
+        db.session.commit()
+        return redirect('/admin/dashboard')
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
