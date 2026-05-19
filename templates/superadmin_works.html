@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>સુપર એડમિન - વર્ક મેનેજમેન્ટ</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:Arial;background:#f0f2f5;padding:16px;}
+        .container{max-width:700px;margin:auto;}
+        .card{background:white;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+        h2{color:#1e6f2f;margin-bottom:5px;}
+        h3{color:#1e6f2f;margin:20px 0 15px;border-bottom:2px solid #ff9800;padding-bottom:8px;}
+        .form-group{margin-bottom:15px;}
+        label{display:block;margin-bottom:5px;font-weight:bold;color:#333;}
+        input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;}
+        button{background:#1e6f2f;color:white;padding:12px 25px;border:none;border-radius:12px;cursor:pointer;font-size:16px;}
+        .delete-link{color:#d32f2f;text-decoration:none;}
+        table{width:100%;border-collapse:collapse;}
+        th,td{padding:12px;text-align:left;border-bottom:1px solid #eee;}
+        th{background:#f8f9fa;}
+        hr{margin:25px 0;}
+        .nav-buttons{display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;}
+        .btn-secondary{background:#555;}
+        .btn-business{background:#ff9800;}
+        .btn-work{background:#2196F3;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>💼 વર્ક મેનેજમેન્ટ</h2>
+            <p>નવું કામ ઉમેરો અથવા હાલના કામ ડિલીટ કરો</p>
+            
+            <div class="nav-buttons">
+                <a href="/superadmin/admins"><button type="button" class="btn-secondary">👥 એડમિન</button></a>
+                <a href="/superadmin/businesses"><button type="button" class="btn-business">🏪 દુકાનો</button></a>
+                <a href="/superadmin/works"><button type="button" class="btn-work">💼 વર્ક</button></a>
+                <a href="/admin/dashboard"><button type="button" class="btn-secondary">← પાછા</button></a>
+            </div>
+            
+            <hr>
+            
+            <!-- ===== ADD NEW WORK FORM ===== -->
+            <h3>➕ નવું કામ ઉમેરો</h3>
+            <form action="/superadmin/add_work" method="POST">
+                <div class="form-group">
+                    <label>કામનું નામ</label>
+                    <input type="text" name="name" placeholder="દા.ત. મિકેનિક, ઇલેક્ટ્રિશિયન, પેઇન્ટર" required>
+                </div>
+                <button type="submit">➕ કામ ઉમેરો</button>
+            </form>
+            
+            <!-- ===== WORKS LIST ===== -->
+            <h3 style="margin-top:30px;">📋 હાલના કામો</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>કામનું નામ</th>
+                        <th>ક્રિયા</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for work in works %}
+                    <tr>
+                        <td>{{ work.id }}</td>
+                        <td>{{ work.name }}</td>
+                        <td>
+                            <a href="/superadmin/delete_work/{{ work.id }}" class="delete-link" onclick="return confirm('આ કામ ડિલીટ કરવું છે?')">🗑️ ડિલીટ</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <hr>
+            <a href="/admin/dashboard"><button type="button" class="btn-secondary">🏠 એડમિન પેનલ પર પાછા</button></a>
+        </div>
+    </div>
+</body>
+</html>

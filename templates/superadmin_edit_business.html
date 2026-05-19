@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>દુકાન એડિટ - સુપર એડમિન</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:Arial;background:#f0f2f5;padding:16px;}
+        .container{max-width:600px;margin:auto;}
+        .card{background:white;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+        h2{color:#1e6f2f;margin-bottom:20px;}
+        .form-group{margin-bottom:15px;}
+        label{display:block;margin-bottom:5px;font-weight:bold;color:#333;}
+        input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;}
+        button{background:#1e6f2f;color:white;padding:12px 25px;border:none;border-radius:12px;cursor:pointer;font-size:16px;}
+        .btn-cancel{background:#555;}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>✏️ દુકાન એડિટ કરો</h2>
+            <form method="POST">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>દુકાનનું નામ</label>
+                        <input type="text" name="name" value="{{ business.name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>માલિકનું નામ</label>
+                        <input type="text" name="owner" value="{{ business.owner }}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>વ્યવસાયનો પ્રકાર</label>
+                        <input type="text" name="type" value="{{ business.type }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>સંપર્ક નંબર</label>
+                        <input type="text" name="contact" value="{{ business.contact or '' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>સરનામું</label>
+                    <input type="text" name="address" value="{{ business.address or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>સમય (Timings)</label>
+                    <input type="text" name="timings" value="{{ business.timings or '' }}">
+                </div>
+                <div style="margin-top:20px;">
+                    <button type="submit">💾 સેવ કરો</button>
+                    <a href="/superadmin/businesses"><button type="button" class="btn-cancel">❌ રદ કરો</button></a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

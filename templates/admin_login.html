@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>એડમિન લોગિન - ઈંગોરાળા</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:Arial;background:linear-gradient(135deg,#1e6f2f,#2e8b3e);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+        .login-box{background:white;max-width:350px;width:100%;padding:35px;border-radius:24px;box-shadow:0 10px 40px rgba(0,0,0,0.2);text-align:center;}
+        .login-box h2{color:#1e6f2f;margin-bottom:10px;}
+        .login-box p{color:#666;margin-bottom:25px;}
+        input{width:100%;padding:14px;margin:10px 0;border:1px solid #ddd;border-radius:12px;font-size:16px;}
+        button{width:100%;padding:14px;background:#1e6f2f;color:white;border:none;border-radius:12px;font-size:16px;cursor:pointer;}
+        .error{color:#d32f2f;margin-bottom:15px;font-size:14px;}
+        .info{color:#666;font-size:12px;margin-top:15px;}
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>🔐 ઈંગોરાળા</h2>
+        <p>એડમિન લોગિન</p>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="POST">
+            <input type="text" name="mobile" placeholder="મોબાઇલ નંબર" required autocomplete="off">
+            <input type="password" name="password" placeholder="પાસવર્ડ" required>
+            <button type="submit">લોગિન</button>
+        </form>
+        <div class="info">
+            📞 મોબાઇલ નંબર અને પાસવર્ડ વડે લોગિન કરો
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>પરિવાર એડિટ - ઈંગોરાળા</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:Arial;background:#f0f2f5;padding:16px;}
+        .container{max-width:700px;margin:auto;}
+        .card{background:white;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+        h2{color:#1e6f2f;margin-bottom:20px;}
+        h3{color:#1e6f2f;margin:20px 0 15px;border-bottom:2px solid #ff9800;padding-bottom:8px;}
+        .form-group{margin-bottom:15px;}
+        label{display:block;margin-bottom:5px;font-weight:bold;color:#333;}
+        input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;}
+        button{background:#1e6f2f;color:white;padding:12px 25px;border:none;border-radius:12px;cursor:pointer;font-size:16px;}
+        .btn-danger{background:#d32f2f;}
+        .btn-warning{background:#ff9800;}
+        .btn-small{padding:6px 12px;font-size:12px;margin:2px;}
+        hr{margin:25px 0;}
+        
+        .member-card{background:#f8f9fa;padding:15px;margin:10px 0;border-radius:12px;border-left:3px solid #ff9800;}
+        .member-name{font-weight:bold;font-size:16px;color:#1e6f2f;margin-bottom:8px;}
+        .member-details{font-size:13px;color:#555;margin:5px 0;}
+        .member-actions{margin-top:10px;}
+        .edit-form{display:none;margin-top:15px;padding-top:15px;border-top:1px dashed #ddd;}
+        
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
+        .required{color:red;}
+        .other-work-input{display:none;margin-top:5px;}
+        .other-work-input input{background:#fff3cd;border-color:#ff9800;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>✏️ પરિવાર એડિટ કરો</h2>
+            
+            <!-- Edit Family Form -->
+            <form method="POST">
+                <div class="form-group">
+                    <label>🏷️ અટક (Surname)</label>
+                    <input type="text" name="surname" value="{{ family.surname }}" required>
+                </div>
+                <div class="form-group">
+                    <label>👨‍👩‍👧‍👦 મુખ્ય વ્યક્તિનું નામ</label>
+                    <input type="text" name="head_name" value="{{ family.head_name }}" required>
+                </div>
+                <div class="form-group">
+                    <label>📞 કુટુંબ સંપર્ક નંબર</label>
+                    <input type="text" name="contact" value="{{ family.contact or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>🏡 સરનામું</label>
+                    <input type="text" name="address" value="{{ family.address or '' }}">
+                </div>
+                <button type="submit">💾 પરિવાર સેવ કરો</button>
+                <a href="/admin/dashboard"><button type="button" style="background:#555;">← પાછા</button></a>
+            </form>
+            
+            <hr>
+            
+            <!-- Members List with Edit/Delete -->
+            <h3>👨‍👩‍👧 પરિવારના સભ્યો</h3>
+            {% for member in members %}
+            <div class="member-card" id="member-{{ member.id }}">
+                <div class="member-name">{{ member.name }}</div>
+                <div class="member-details">
+                    <span>📅 જન્મ તારીખ: {{ member.dob.strftime('%d/%m/%Y') if member.dob else '-' }}</span>
+                    <span> | 🎂 ઉંમર: {{ member.age if member.age else '-' }} વર્ષ</span>
+                </div>
+                <div class="member-details">
+                    <span>👨‍👩‍👧‍👦 {{ member.relation }}</span>
+                    <span> | 💼 {{ member.work or 'કામ નથી' }}</span>
+                    <span> | 📞 {{ member.contact or '-' }}</span>
+                    <span> | 
+                        {% if member.gender == 'પુરુષ' %}👨 પુરુષ
+                        {% elif member.gender == 'સ્ત્રી' %}👩 સ્ત્રી
+                        {% else %}-{% endif %}
+                    </span>
+                </div>
+                <div class="member-actions">
+                    <button type="button" class="btn-warning btn-small" onclick="toggleEditForm({{ member.id }})">✏️ એડિટ</button>
+                    <a href="/admin/delete_member/{{ member.id }}" class="btn-danger btn-small" style="text-decoration:none;display:inline-block;padding:6px 12px;border-radius:12px;" onclick="return confirm('આ સભ્યને ડિલીટ કરવો છે?')">🗑️ ડિલીટ</a>
+                </div>
+                
+                <!-- Edit Member Form (Hidden by default) -->
+                <div id="edit-form-{{ member.id }}" class="edit-form">
+                    <form action="/admin/edit_member/{{ member.id }}" method="POST">
+                        <div class="form-row">
+                            <div class="form-group"><input type="text" name="name" value="{{ member.name }}" placeholder="નામ" required></div>
+                            <div class="form-group"><input type="date" name="dob" value="{{ member.dob.strftime('%Y-%m-%d') if member.dob else '' }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <select name="gender">
+                                    <option value="">-- લિંગ --</option>
+                                    <option value="પુરુષ" {% if member.gender == 'પુરુષ' %}selected{% endif %}>👨 પુરુષ</option>
+                                    <option value="સ્ત્રી" {% if member.gender == 'સ્ત્રી' %}selected{% endif %}>👩 સ્ત્રી</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <select name="relation">
+                                    <option value="મુખ્ય વ્યક્તિ" {% if member.relation == 'મુખ્ય વ્યક્તિ' %}selected{% endif %}>મુખ્ય વ્યક્તિ</option>
+                                    <option value="પત્ની" {% if member.relation == 'પત્ની' %}selected{% endif %}>પત્ની</option>
+                                    <option value="દીકરો" {% if member.relation == 'દીકરો' %}selected{% endif %}>દીકરો</option>
+                                    <option value="દીકરી" {% if member.relation == 'દીકરી' %}selected{% endif %}>દીકરી</option>
+                                    <option value="પિતા" {% if member.relation == 'પિતા' %}selected{% endif %}>પિતા</option>
+                                    <option value="માતા" {% if member.relation == 'માતા' %}selected{% endif %}>માતા</option>
+                                    <option value="ભાઈ" {% if member.relation == 'ભાઈ' %}selected{% endif %}>ભાઈ</option>
+                                    <option value="બહેન" {% if member.relation == 'બહેન' %}selected{% endif %}>બહેન</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <select name="work" class="work-select-{{ member.id }}" onchange="toggleOtherWorkEdit({{ member.id }})">
+                                    <option value="">-- કામ --</option>
+                                    <option value="ખેડૂત" {% if member.work == 'ખેડૂત' %}selected{% endif %}>🌾 ખેડૂત</option>
+                                    <option value="મજૂરી" {% if member.work == 'મજૂરી' %}selected{% endif %}>🔨 મજૂરી</option>
+                                    <option value="ગૃહિણી" {% if member.work == 'ગૃહિણી' %}selected{% endif %}>🏠 ગૃહિણી</option>
+                                    <option value="વ્યવસાય" {% if member.work == 'વ્યવસાય' %}selected{% endif %}>🏪 વ્યવસાય</option>
+                                    <option value="નોકરી" {% if member.work == 'નોકરી' %}selected{% endif %}>💼 નોકરી</option>
+                                    <option value="વિદ્યાર્થી" {% if member.work == 'વિદ્યાર્થી' %}selected{% endif %}>📚 વિદ્યાર્થી</option>
+                                    <option value="શિક્ષક" {% if member.work == 'શિક્ષક' %}selected{% endif %}>📖 શિક્ષક</option>
+                                    <option value="ડોક્ટર" {% if member.work == 'ડોક્ટર' %}selected{% endif %}>🏥 ડોક્ટર</option>
+                                    <option value="અન્ય">📌 અન્ય</option>
+                                </select>
+                                <div id="other-work-edit-{{ member.id }}" class="other-work-input" style="display:{% if member.work not in ['ખેડૂત','મજૂરી','ગૃહિણી','વ્યવસાય','નોકરી','વિદ્યાર્થી','શિક્ષક','ડોક્ટר'] %}block{% else %}none{% endif %}">
+                                    <input type="text" name="work_other" value="{% if member.work not in ['ખેડૂત','મજૂરી','ગૃહિણી','વ્યવસાય','નોકરી','વિદ્યાર્થી','શિક્ષક','ડોક્ટર'] %}{{ member.work }}{% endif %}" placeholder="તમારું કામ લખો...">
+                                </div>
+                            </div>
+                            <div class="form-group"><input type="tel" name="contact" value="{{ member.contact or '' }}" placeholder="સંપર્ક"></div>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <button type="submit" class="btn-small">💾 સભ્ય સેવ કરો</button>
+                            <button type="button" class="btn-small" style="background:#555;" onclick="toggleEditForm({{ member.id }})">❌ રદ કરો</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- Add New Member Form -->
+            <h3 style="margin-top:20px;">➕ નવો સભ્ય ઉમેરો</h3>
+            <form action="/admin/add_member/{{ family.id }}" method="POST">
+                <div class="form-row">
+                    <div class="form-group"><input type="text" name="name" placeholder="નામ *" required></div>
+                    <div class="form-group"><input type="date" name="dob" placeholder="જન્મ તારીખ"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <select name="gender">
+                            <option value="">-- લિંગ --</option>
+                            <option value="પુરુષ">👨 પુરુષ</option>
+                            <option value="સ્ત્રી">👩 સ્ત્રી</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select name="relation">
+                            <option value="">-- સંબંધ --</option>
+                            <option value="મુખ્ય વ્યક્તિ">મુખ્ય વ્યક્તિ</option>
+                            <option value="પત્ની">પત્ની</option>
+                            <option value="દીકરો">દીકરો</option>
+                            <option value="દીકરી">દીકરી</option>
+                            <option value="પિતા">પિતા</option>
+                            <option value="માતા">માતા</option>
+                            <option value="ભાઈ">ભાઈ</option>
+                            <option value="બહેન">બહેન</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <select name="work" class="work-select-add" onchange="toggleOtherWorkAdd()">
+                            <option value="">-- કામ --</option>
+                            <option value="ખેડૂત">🌾 ખેડૂત</option>
+                            <option value="મજૂરી">🔨 મજૂરી</option>
+                            <option value="ગૃહિણી">🏠 ગૃહિણી</option>
+                            <option value="વ્યવસાય">🏪 વ્યવસાય</option>
+                            <option value="નોકરી">💼 નોકરી</option>
+                            <option value="વિદ્યાર્થી">📚 વિદ્યાર્થી</option>
+                            <option value="શિક્ષક">📖 શિક્ષક</option>
+                            <option value="ડોક્ટર">🏥 ડોક્ટર</option>
+                            <option value="અન્ય">📌 અન્ય</option>
+                        </select>
+                        <div id="other-work-add" class="other-work-input">
+                            <input type="text" name="work_other" placeholder="તમારું કામ લખો...">
+                        </div>
+                    </div>
+                    <div class="form-group"><input type="tel" name="contact" placeholder="📞 સંપર્ક (વૈકલ્પિક)"></div>
+                </div>
+                <button type="submit">➕ સભ્ય ઉમેરો</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function toggleEditForm(memberId) {
+            const form = document.getElementById(`edit-form-${memberId}`);
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
+        }
+        
+        function toggleOtherWorkEdit(memberId) {
+            const select = document.querySelector(`.work-select-${memberId}`);
+            const otherDiv = document.getElementById(`other-work-edit-${memberId}`);
+            if (select.value === 'અન્ય') {
+                otherDiv.style.display = 'block';
+            } else {
+                otherDiv.style.display = 'none';
+            }
+        }
+        
+        function toggleOtherWorkAdd() {
+            const select = document.querySelector('.work-select-add');
+            const otherDiv = document.getElementById('other-work-add');
+            if (select.value === 'અન્ય') {
+                otherDiv.style.display = 'block';
+            } else {
+                otherDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

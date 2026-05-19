@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>સુપર એડમિન - એડમિન મેનેજમેન્ટ</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:Arial;background:#f0f2f5;padding:16px;}
+        .container{max-width:800px;margin:auto;}
+        .card{background:white;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+        h2{color:#1e6f2f;margin-bottom:5px;}
+        h3{color:#1e6f2f;margin:20px 0 15px;border-bottom:2px solid #ff9800;padding-bottom:8px;}
+        .form-group{margin-bottom:15px;}
+        label{display:block;margin-bottom:5px;font-weight:bold;color:#333;}
+        input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;}
+        button{background:#1e6f2f;color:white;padding:12px 25px;border:none;border-radius:12px;cursor:pointer;font-size:16px;}
+        .delete-link{color:#d32f2f;text-decoration:none;}
+        table{width:100%;border-collapse:collapse;}
+        th,td{padding:12px;text-align:left;border-bottom:1px solid #eee;}
+        th{background:#f8f9fa;}
+        hr{margin:25px 0;}
+        .nav-buttons{display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>👑 સુપર એડમિન પેનલ</h2>
+            <p>એડમિન મેનેજમેન્ટ - નવો એડમિન ઉમેરો અથવા ડિલીટ કરો</p>
+
+            <div class="nav-buttons">
+                <a href="/superadmin/admins"><button type="button" style="background:#1e6f2f;">👥 એડમિન</button></a>
+                <a href="/superadmin/businesses"><button type="button" style="background:#ff9800;">🏪 દુકાનો</button></a>
+                <a href="/superadmin/works"><button type="button" style="background:#2196F3;">💼 વર્ક</button></a>
+                <a href="/admin/dashboard"><button type="button" style="background:#555;">← પાછા</button></a>
+            </div>
+
+            <hr>
+
+            <!-- ===== ADD NEW ADMIN FORM ===== -->
+            <h3>➕ નવો એડમિન ઉમેરો</h3>
+            <form action="/superadmin/add_admin" method="POST">
+                <div class="form-group">
+                    <label>નામ</label>
+                    <input type="text" name="name" placeholder="દા.ત. રમેશભાઈ પટેલ" required>
+                </div>
+                <div class="form-group">
+                    <label>મોબાઇલ નંબર</label>
+                    <input type="text" name="mobile" placeholder="9876543210" required>
+                </div>
+                <div class="form-group">
+                    <label>પાસવર્ડ</label>
+                    <input type="text" name="password" placeholder="પાસવર્ડ" required>
+                </div>
+                <button type="submit">➕ એડમિન ઉમેરો</button>
+            </form>
+
+            <!-- ===== ADMINS LIST ===== -->
+            <h3 style="margin-top:30px;">📋 હાલના એડમિન</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>નામ</th>
+                        <th>મોબાઇલ</th>
+                        <th>તારીખ</th>
+                        <th>ક્રિયા</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in admins %}
+                    <tr>
+                        <td>{{ admin.id }}</td>
+                        <td>{{ admin.name }}</td>
+                        <td>{{ admin.mobile }}</td>
+                        <td>{{ admin.created_at.strftime('%d/%m/%Y') if admin.created_at else '-' }}</td>
+                        <td>
+                            {% if admin.mobile != 'admin' %}
+                            <a href="/superadmin/delete_admin/{{ admin.id }}" class="delete-link" onclick="return confirm('આ એડમિનને ડિલીટ કરવો છે?')">🗑️ ડિલીટ</a>
+                            {% else %}
+                            <span style="color:#999;">👑 સુપર એડમિન</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <hr>
+            <a href="/admin/dashboard"><button type="button" style="background:#555;">🏠 એડમિન પેનલ પર પાછા</button></a>
+        </div>
+    </div>
+</body>
+</html>
