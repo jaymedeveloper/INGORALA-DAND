@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
+led_state = "OFF"
 app = Flask(__name__)
 app.secret_key = 'ingorala_village_secret_key_2024'
 
