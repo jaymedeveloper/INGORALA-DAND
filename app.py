@@ -612,5 +612,31 @@ def add_notice():
         db.session.rollback()
         return f"Error: {str(e)}", 500
 
+
+@app.route("/led")
+def led():
+    return render_template("led.html", state=led_state)
+
+
+@app.route("/set-led", methods=["POST"])
+def set_led():
+    global led_state
+
+    data = request.get_json()
+    led_state = data["state"]
+
+    return jsonify({
+        "success": True,
+        "led": led_state
+    })
+
+
+@app.route("/get-led")
+def get_led():
+    return jsonify({
+        "led": led_state
+    })
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
