@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LED Control</title>
+
+    <style>
+        body{
+            font-family: Arial;
+            text-align:center;
+            margin-top:100px;
+        }
+
+        button{
+            width:150px;
+            height:60px;
+            font-size:20px;
+            margin:10px;
+            cursor:pointer;
+        }
+
+        .on{
+            background:green;
+            color:white;
+        }
+
+        .off{
+            background:red;
+            color:white;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>ESP32 LED Control</h1>
+
+    <h2 id="status">
+        LED Status : {{ state }}
+    </h2>
+
+    <button class="on" onclick="setLED('ON')">
+        ON
+    </button>
+
+    <button class="off" onclick="setLED('OFF')">
+        OFF
+    </button>
+
+<script>
+
+async function setLED(state){
+
+    let response = await fetch("/set-led",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            state:state
+        })
+    });
+
+    let data = await response.json();
+
+    document.getElementById("status").innerText =
+        "LED Status : " + data.led;
+}
+
+</script>
+
+</body>
+</html>
