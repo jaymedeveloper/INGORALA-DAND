@@ -84,6 +84,31 @@
             font-size: 14px;
         }
 
+        /* Radio Group Styles */
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 8px 0;
+        }
+
+        .radio-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: normal;
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+
+        .radio-group input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+
         textarea {
             width: 100%;
             padding: 12px;
@@ -258,6 +283,11 @@
             font-size: 11px;
             color: #999;
         }
+
+        .city-other {
+            background: #fff3cd;
+            border-color: #ff9800;
+        }
     </style>
 </head>
 
@@ -316,7 +346,6 @@
             </table>
 
             <!-- ===== ADD FAMILY FORM ===== -->
-            <!-- ===== ADD FAMILY FORM ===== -->
             <h3 style="margin-top:30px;">➕ નવો પરિવાર ઉમેરો</h3>
             <form id="familyForm" action="/admin/add_family" method="POST">
                 <div class="form-group">
@@ -336,7 +365,7 @@
                     <input type="text" name="address" placeholder="મુખ્ય માર્ગ, મંદિર પાસે, ઈંગોરાળા">
                 </div>
 
-                <!-- 👇 CITY DROPDOWN WITH "અન્ય" OPTION -->
+                <!-- CITY DROPDOWN WITH "અન્ય" OPTION -->
                 <div class="form-group">
                     <label>🏙️ શહેર / ગામ</label>
                     <select name="city" id="citySelect" onchange="toggleOtherCity()">
@@ -355,24 +384,38 @@
                     </div>
                 </div>
 
-                <!-- Rest of the form -->
+                <!-- Members Container -->
                 <div id="membersContainer">
                     <div class="member-row" data-index="0">
                         <input type="text" name="member_name_0" placeholder="નામ *" required>
                         <input type="date" name="member_dob_0" placeholder="જન્મ તારીખ">
                         <input type="tel" name="member_contact_0" placeholder="📞 સંપર્ક (વૈકલ્પિક)">
-                        <select name="member_gender_0">
-                            <option value="" hidden>-- લિંગ --</option>
-                            <option value="પુરુષ">👨 પુરુષ</option>
-                            <option value="સ્ત્રી">👩 સ્ત્રી</option>
-                        </select>
-                        <select name="member_relation_0">
-                            <option value="" hidden>-- સંબંધ --</option>
-                            <option value="મુખ્ય વ્યક્તિ">મુખ્ય વ્યક્તિ</option>
-                            <option value="પત્ની">પત્ની</option>
-                            <option value="દીકરો">દીકરો</option>
-                            <option value="દીકરી">દીકરી</option>
-                        </select>
+                        
+                        <!-- GENDER - RADIO BUTTONS -->
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>👨‍👩‍👧‍👦 લિંગ</label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="member_gender_0" value="પુરુષ"> 👨 પુરુષ
+                                </label>
+                                <label>
+                                    <input type="radio" name="member_gender_0" value="સ્ત્રી"> 👩 સ્ત્રી
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- RELATION - RADIO BUTTONS -->
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>👨‍👩‍👧‍👦 સંબંધ</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="member_relation_0" value="મુખ્ય વ્યક્તિ"> મુખ્ય વ્યક્તિ</label>
+                                <label><input type="radio" name="member_relation_0" value="પત્ની"> પત્ની</label>
+                                <label><input type="radio" name="member_relation_0" value="દીકરો"> દીકરો</label>
+                                <label><input type="radio" name="member_relation_0" value="દીકરી"> દીકરી</label>
+                            </div>
+                        </div>
+                        
+                        <!-- WORK DROPDOWN -->
                         <select name="member_work_0" class="work-select" onchange="toggleOtherWork(this)">
                             <option value="" hidden>-- કામ --</option>
                             {% for work in works %}
@@ -393,8 +436,6 @@
                 <br><br>
                 <button type="submit" onclick="prepareSubmit()">💾 પરિવાર સેવ કરો</button>
             </form>
-
-
 
             <!-- ===== ADD NOTICE FORM ===== -->
             <h3 style="margin-top:30px;">📢 નવો સમાચાર ઉમેરો</h3>
@@ -425,8 +466,7 @@
                     <tr>
                         <td>
                             <div class="notice-title">{{ notice.title }}</div>
-                            <div class="notice-content">{{ notice.content[:80] }}{% if notice.content|length > 80
-                                %}...{% endif %}</div>
+                            <div class="notice-content">{{ notice.content[:80] }}{% if notice.content|length > 80 %}...{% endif %}</div>
                         </td>
                         <td class="notice-admin">
                             👤 {{ notice.admin_name or 'અજ્ઞાત' }}
@@ -450,8 +490,7 @@
     </div>
 
     <script>
-
-
+        let memberIndex = 1;
 
         // ===== TOGGLE OTHER CITY FIELD =====
         function toggleOtherCity() {
@@ -465,28 +504,7 @@
             }
         }
 
-        // Handle form submission for city
-        const familyForm = document.getElementById('familyForm');
-        if (familyForm) {
-            familyForm.addEventListener('submit', function (e) {
-                const citySelect = document.getElementById('citySelect');
-                const cityOther = document.getElementById('cityOther');
-
-                if (citySelect && citySelect.value === 'અન્ય' && cityOther && cityOther.value.trim() !== '') {
-                    // Disable select so it doesn't submit
-                    citySelect.disabled = true;
-                    // The city_other value will be sent as 'city_other'
-                    // We'll handle it in app.py
-                }
-            });
-        }
-
-        // Rest of your existing JavaScript functions (addMember, removeMember, prepareSubmit, toggleOtherWork, etc.)
-
-
-
-        let memberIndex = 1;
-
+        // ===== TOGGLE OTHER WORK FIELD =====
         function toggleOtherWork(selectElement) {
             const row = selectElement.closest('.member-row');
             const otherDiv = row.querySelector('.other-work-input');
@@ -497,6 +515,7 @@
             }
         }
 
+        // ===== ADD NEW MEMBER =====
         function addMember() {
             const container = document.getElementById('membersContainer');
             const newDiv = document.createElement('div');
@@ -506,18 +525,25 @@
                 <input type="text" name="member_name_${memberIndex}" placeholder="નામ *" required>
                 <input type="date" name="member_dob_${memberIndex}" placeholder="જન્મ તારીખ">
                 <input type="tel" name="member_contact_${memberIndex}" placeholder="📞 સંપર્ક (વૈકલ્પિક)">
-                <select name="member_gender_${memberIndex}">
-                    <option value="" hidden>-- લિંગ --</option>
-                    <option value="પુરુષ">👨 પુરુષ</option>
-                    <option value="સ્ત્રી">👩 સ્ત્રી</option>
-                </select>
-                <select name="member_relation_${memberIndex}">
-                    <option value="" hidden>-- સંબંધ --</option>
-                    <option value="મુખ્ય વ્યક્તિ">મુખ્ય વ્યક્તિ</option>
-                    <option value="પત્ની">પત્ની</option>
-                    <option value="દીકરો">દીકરો</option>
-                    <option value="દીકરી">દીકરી</option>
-                </select>
+                
+                <div class="form-group" style="margin-top:10px;">
+                    <label>👨‍👩‍👧‍👦 લિંગ</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="member_gender_${memberIndex}" value="પુરુષ"> 👨 પુરુષ</label>
+                        <label><input type="radio" name="member_gender_${memberIndex}" value="સ્ત્રી"> 👩 સ્ત્રી</label>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top:10px;">
+                    <label>👨‍👩‍👧‍👦 સંબંધ</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="member_relation_${memberIndex}" value="મુખ્ય વ્યક્તિ"> મુખ્ય વ્યક્તિ</label>
+                        <label><input type="radio" name="member_relation_${memberIndex}" value="પત્ની"> પત્ની</label>
+                        <label><input type="radio" name="member_relation_${memberIndex}" value="દીકરો"> દીકરો</label>
+                        <label><input type="radio" name="member_relation_${memberIndex}" value="દીકરી"> દીકરી</label>
+                    </div>
+                </div>
+                
                 <select name="member_work_${memberIndex}" class="work-select" onchange="toggleOtherWork(this)">
                     <option value="" hidden>-- કામ --</option>
                     {% for work in works %}
@@ -534,10 +560,12 @@
             memberIndex++;
         }
 
+        // ===== REMOVE MEMBER =====
         function removeMember(btn) {
             btn.parentElement.remove();
         }
 
+        // ===== PREPARE SUBMIT - COLLECT ALL MEMBERS DATA =====
         function prepareSubmit() {
             const members = [];
             const rows = document.querySelectorAll('.member-row');
@@ -551,13 +579,21 @@
                             work = otherWork;
                         }
                     }
+                    
+                    // Get selected gender from radio buttons
+                    const genderRadio = row.querySelector('input[name^="member_gender_"]:checked');
+                    const gender = genderRadio ? genderRadio.value : '';
+                    
+                    // Get selected relation from radio buttons
+                    const relationRadio = row.querySelector('input[name^="member_relation_"]:checked');
+                    const relation = relationRadio ? relationRadio.value : '';
 
                     members.push({
                         name: name,
                         dob: row.querySelector('input[name^="member_dob_"]')?.value || '',
                         contact: row.querySelector('input[name^="member_contact_"]')?.value || '',
-                        gender: row.querySelector('select[name^="member_gender_"]')?.value || '',
-                        relation: row.querySelector('select[name^="member_relation_"]')?.value || '',
+                        gender: gender,
+                        relation: relation,
                         work: work || ''
                     });
                 }
@@ -566,6 +602,19 @@
             document.getElementById('membersCount').value = members.length;
         }
 
+        // Handle form submission for city
+        const familyForm = document.getElementById('familyForm');
+        if (familyForm) {
+            familyForm.addEventListener('submit', function (e) {
+                const citySelect = document.getElementById('citySelect');
+                const cityOther = document.getElementById('cityOther');
+                if (citySelect && citySelect.value === 'અન્ય' && cityOther && cityOther.value.trim() !== '') {
+                    citySelect.disabled = true;
+                }
+            });
+        }
+
+        // Hide remove button for first member
         const firstRemoveBtn = document.querySelector('.remove-member');
         if (firstRemoveBtn) {
             firstRemoveBtn.style.display = 'none';
