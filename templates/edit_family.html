@@ -37,7 +37,7 @@
         <div class="card">
             <h2>✏️ પરિવાર એડિટ કરો</h2>
             
-            <!-- Edit Family Form -->
+            <!-- Edit Family Form with City Dropdown -->
             <form method="POST">
                 <div class="form-group">
                     <label>🏷️ અટક (Surname)</label>
@@ -55,13 +55,27 @@
                     <label>🏡 સરનામું</label>
                     <input type="text" name="address" value="{{ family.address or '' }}">
                 </div>
+                
+                <!-- 👇 CITY DROPDOWN -->
+                <div class="form-group">
+                    <label>🏙️ શહેર / ગામ</label>
+                    <select name="city">
+                        <option value="">-- શહેર પસંદ કરો --</option>
+                        {% for city in cities %}
+                        <option value="{{ city.name }}" {% if family.city == city.name %}selected{% endif %}>
+                            {{ city.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
                 <button type="submit">💾 પરિવાર સેવ કરો</button>
                 <a href="/admin/dashboard"><button type="button" style="background:#555;">← પાછા</button></a>
             </form>
             
             <hr>
             
-            <!-- Members List with Edit/Delete -->
+            <!-- Members List (rest remains same) -->
             <h3>👨‍👩‍👧 પરિવારના સભ્યો</h3>
             {% for member in members %}
             <div class="member-card" id="member-{{ member.id }}">
@@ -85,7 +99,7 @@
                     <a href="/admin/delete_member/{{ member.id }}" class="btn-danger btn-small" style="text-decoration:none;display:inline-block;padding:6px 12px;border-radius:12px;" onclick="return confirm('આ સભ્યને ડિલીટ કરવો છે?')">🗑️ ડિલીટ</a>
                 </div>
                 
-                <!-- Edit Member Form (Hidden by default) -->
+                <!-- Edit Member Form -->
                 <div id="edit-form-{{ member.id }}" class="edit-form">
                     <form action="/admin/edit_member/{{ member.id }}" method="POST">
                         <div class="form-row">
@@ -106,10 +120,6 @@
                                     <option value="પત્ની" {% if member.relation == 'પત્ની' %}selected{% endif %}>પત્ની</option>
                                     <option value="દીકરો" {% if member.relation == 'દીકરો' %}selected{% endif %}>દીકરો</option>
                                     <option value="દીકરી" {% if member.relation == 'દીકરી' %}selected{% endif %}>દીકરી</option>
-                                    <option value="પિતા" {% if member.relation == 'પિતા' %}selected{% endif %}>પિતા</option>
-                                    <option value="માતા" {% if member.relation == 'માતા' %}selected{% endif %}>માતા</option>
-                                    <option value="ભાઈ" {% if member.relation == 'ભાઈ' %}selected{% endif %}>ભાઈ</option>
-                                    <option value="બહેન" {% if member.relation == 'બહેન' %}selected{% endif %}>બહેન</option>
                                 </select>
                             </div>
                         </div>
@@ -117,18 +127,13 @@
                             <div class="form-group">
                                 <select name="work" class="work-select-{{ member.id }}" onchange="toggleOtherWorkEdit({{ member.id }})">
                                     <option value="">-- કામ --</option>
-                                    <option value="ખેડૂત" {% if member.work == 'ખેડૂત' %}selected{% endif %}>🌾 ખેડૂત</option>
-                                    <option value="મજૂરી" {% if member.work == 'મજૂરી' %}selected{% endif %}>🔨 મજૂરી</option>
-                                    <option value="ગૃહિણી" {% if member.work == 'ગૃહિણી' %}selected{% endif %}>🏠 ગૃહિણી</option>
-                                    <option value="વ્યવસાય" {% if member.work == 'વ્યવસાય' %}selected{% endif %}>🏪 વ્યવસાય</option>
-                                    <option value="નોકરી" {% if member.work == 'નોકરી' %}selected{% endif %}>💼 નોકરી</option>
-                                    <option value="વિદ્યાર્થી" {% if member.work == 'વિદ્યાર્થી' %}selected{% endif %}>📚 વિદ્યાર્થી</option>
-                                    <option value="શિક્ષક" {% if member.work == 'શિક્ષક' %}selected{% endif %}>📖 શિક્ષક</option>
-                                    <option value="ડોક્ટર" {% if member.work == 'ડોક્ટર' %}selected{% endif %}>🏥 ડોક્ટર</option>
+                                    {% for work in works %}
+                                    <option value="{{ work.name }}" {% if member.work == work.name %}selected{% endif %}>{{ work.name }}</option>
+                                    {% endfor %}
                                     <option value="અન્ય">📌 અન્ય</option>
                                 </select>
-                                <div id="other-work-edit-{{ member.id }}" class="other-work-input" style="display:{% if member.work not in ['ખેડૂત','મજૂરી','ગૃહિણી','વ્યવસાય','નોકરી','વિદ્યાર્થી','શિક્ષક','ડોક્ટר'] %}block{% else %}none{% endif %}">
-                                    <input type="text" name="work_other" value="{% if member.work not in ['ખેડૂત','મજૂરી','ગૃહિણી','વ્યવસાય','નોકરી','વિદ્યાર્થી','શિક્ષક','ડોક્ટર'] %}{{ member.work }}{% endif %}" placeholder="તમારું કામ લખો...">
+                                <div id="other-work-edit-{{ member.id }}" class="other-work-input" style="display:{% if member.work not in works|map(attribute='name')|list and member.work %}block{% else %}none{% endif %}">
+                                    <input type="text" name="work_other" value="{% if member.work not in works|map(attribute='name')|list %}{{ member.work }}{% endif %}" placeholder="તમારું કામ લખો...">
                                 </div>
                             </div>
                             <div class="form-group"><input type="tel" name="contact" value="{{ member.contact or '' }}" placeholder="સંપર્ક"></div>
@@ -164,10 +169,6 @@
                             <option value="પત્ની">પત્ની</option>
                             <option value="દીકરો">દીકરો</option>
                             <option value="દીકરી">દીકરી</option>
-                            <option value="પિતા">પિતા</option>
-                            <option value="માતા">માતા</option>
-                            <option value="ભાઈ">ભાઈ</option>
-                            <option value="બહેન">બહેન</option>
                         </select>
                     </div>
                 </div>
@@ -175,14 +176,9 @@
                     <div class="form-group">
                         <select name="work" class="work-select-add" onchange="toggleOtherWorkAdd()">
                             <option value="">-- કામ --</option>
-                            <option value="ખેડૂત">🌾 ખેડૂત</option>
-                            <option value="મજૂરી">🔨 મજૂરી</option>
-                            <option value="ગૃહિણી">🏠 ગૃહિણી</option>
-                            <option value="વ્યવસાય">🏪 વ્યવસાય</option>
-                            <option value="નોકરી">💼 નોકરી</option>
-                            <option value="વિદ્યાર્થી">📚 વિદ્યાર્થી</option>
-                            <option value="શિક્ષક">📖 શિક્ષક</option>
-                            <option value="ડોક્ટર">🏥 ડોક્ટર</option>
+                            {% for work in works %}
+                            <option value="{{ work.name }}">{{ work.name }}</option>
+                            {% endfor %}
                             <option value="અન્ય">📌 અન્ય</option>
                         </select>
                         <div id="other-work-add" class="other-work-input">
