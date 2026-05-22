@@ -6,17 +6,17 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-led_state = "OFF"
+
 app = Flask(__name__)
 app.secret_key = 'ingorala_village_secret_key_2024'
 
 # ========== SESSION CONFIGURATION - 30 DAYS ==========
 app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # 👈 30 days session
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Refresh session on each request
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 
 # ========== DATABASE CONFIGURATION ==========
 DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://neondb_owner:npg_sOe3yinBHG5k@ep-polished-truth-apa48k4z-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require')
@@ -48,6 +48,12 @@ class Admin(db.Model):
     password = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class City(db.Model):
+    __tablename__ = 'cities'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Family(db.Model):
     __tablename__ = 'families'
     id = db.Column(db.Integer, primary_key=True)
@@ -56,6 +62,7 @@ class Family(db.Model):
     members_count = db.Column(db.Integer, default=1)
     contact = db.Column(db.String(15))
     address = db.Column(db.String(200))
+    city = db.Column(db.String(100))
     photo = db.Column(db.String(300))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     admin_id = db.Column(db.Integer, db.ForeignKey('admins.id', ondelete='SET NULL'))
@@ -228,8 +235,8 @@ def work_detail(work_name):
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if session.get('admin_id'):
-            return redirect('/admin/dashboard')
-    # Clear any existing session on GET request
+        return redirect('/admin/dashboard')
+    
     if request.method == 'GET':
         session.clear()
     
@@ -239,9 +246,8 @@ def admin_login():
         
         admin = Admin.query.filter_by(mobile=mobile).first()
         if admin and admin.password == password:
-            # Clear session before setting new
             session.clear()
-            session.permanent = True  # 👈 This enables 30 days session
+            session.permanent = True
             session['admin_id'] = admin.id
             session['admin_name'] = admin.name
             session['admin_mobile'] = admin.mobile
@@ -258,21 +264,17 @@ def admin_logout():
 # ========== SESSION CHECK MIDDLEWARE ==========
 @app.before_request
 def check_session():
-    # Skip these routes (public pages)
     public_routes = ['admin_login', 'static', 'index', 'families', 'family_detail', 
                      'businesses', 'gallery', 'works', 'work_detail']
     
     if request.endpoint in public_routes:
         return None
     
-    # For admin routes, check session
     if request.endpoint and request.endpoint.startswith('admin') and request.endpoint != 'admin_login':
         if not session.get('admin_id'):
             return redirect('/admin/login')
-        # Refresh session on each request to keep it alive
         session.permanent = True
     
-    # For superadmin routes, check session and super admin status
     if request.endpoint and request.endpoint.startswith('superadmin'):
         if not session.get('admin_id'):
             return redirect('/admin/login')
@@ -314,6 +316,8 @@ def superadmin_delete_admin(id):
     db.session.delete(admin_to_delete)
     db.session.commit()
     return redirect('/superadmin/admins')
+
+# ========== SUPER ADMIN BUSINESS ROUTES ==========
 
 @app.route('/superadmin/businesses')
 def superadmin_businesses():
@@ -365,6 +369,8 @@ def superadmin_delete_business(id):
     db.session.commit()
     return redirect('/superadmin/businesses')
 
+# ========== SUPER ADMIN WORK ROUTES ==========
+
 @app.route('/superadmin/works')
 def superadmin_works():
     works = Work.query.order_by(Work.name).all()
@@ -392,6 +398,35 @@ def superadmin_delete_work(id):
     db.session.commit()
     return redirect('/superadmin/works')
 
+# ========== SUPER ADMIN CITY ROUTES ==========
+
+@app.route('/superadmin/cities')
+def superadmin_cities():
+    cities = City.query.order_by(City.name).all()
+    return render_template('superadmin_cities.html', cities=cities)
+
+@app.route('/superadmin/add_city', methods=['POST'])
+def superadmin_add_city():
+    try:
+        city_name = request.form.get('name').strip()
+        if city_name:
+            existing = City.query.filter_by(name=city_name).first()
+            if not existing:
+                new_city = City(name=city_name)
+                db.session.add(new_city)
+                db.session.commit()
+        return redirect('/superadmin/cities')
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
+
+@app.route('/superadmin/delete_city/<int:id>')
+def superadmin_delete_city(id):
+    city = City.query.get_or_404(id)
+    db.session.delete(city)
+    db.session.commit()
+    return redirect('/superadmin/cities')
+
 # ========== REGULAR ADMIN DASHBOARD ==========
 
 @app.route('/admin/dashboard')
@@ -403,6 +438,7 @@ def admin_dashboard():
     families = Family.query.filter_by(admin_id=admin_id).order_by(Family.created_at.desc()).all()
     notices = Notice.query.order_by(Notice.date.desc()).limit(20).all()
     works = Work.query.order_by(Work.name).all()
+    cities = City.query.order_by(City.name).all()  # 👈 Get cities
     
     total_families = len(families)
     total_members = Member.query.join(Family).filter(Family.admin_id == admin_id).count()
@@ -412,6 +448,7 @@ def admin_dashboard():
                          families=families,
                          notices=notices,
                          works=works,
+                         cities=cities,  # 👈 Pass cities to template
                          total_families=total_families,
                          total_members=total_members,
                          total_businesses=total_businesses,
@@ -428,17 +465,31 @@ def add_family():
         surname_clean = surname_raw.strip()
         surname_clean = ' '.join(surname_clean.split())
         
+        # Handle city - if "અન્ય" selected, use city_other value
+        city_value = request.form.get('city')
+        if city_value == 'અન્ય':
+            city_value = request.form.get('city_other', '').strip()
+            # Optional: Save new city to cities table
+            if city_value:
+                existing_city = City.query.filter_by(name=city_value).first()
+                if not existing_city:
+                    new_city = City(name=city_value)
+                    db.session.add(new_city)
+                    db.session.commit()
+        
         family = Family(
             surname=surname_clean,
             head_name=request.form.get('head_name'),
             members_count=int(request.form.get('members_count', 1)),
             contact=request.form.get('contact'),
             address=request.form.get('address'),
+            city=city_value,
             admin_id=session['admin_id']
         )
         db.session.add(family)
         db.session.flush()
         
+        # Rest of member saving code...
         members_data = request.form.get('members_data', '[]')
         members = json.loads(members_data)
         
@@ -479,10 +530,23 @@ def edit_family(id):
     
     if request.method == 'POST':
         try:
+            # Handle city - if "અન્ય" selected, use city_other value
+            city_value = request.form.get('city')
+            if city_value == 'અન્ય':
+                city_value = request.form.get('city_other', '').strip()
+                # Optional: Save new city to cities table
+                if city_value:
+                    existing_city = City.query.filter_by(name=city_value).first()
+                    if not existing_city:
+                        new_city = City(name=city_value)
+                        db.session.add(new_city)
+                        db.session.commit()
+            
             family.surname = request.form.get('surname')
             family.head_name = request.form.get('head_name')
             family.contact = request.form.get('contact')
             family.address = request.form.get('address')
+            family.city = city_value
             db.session.commit()
             return redirect('/admin/dashboard')
         except Exception as e:
@@ -491,7 +555,8 @@ def edit_family(id):
     
     members = Member.query.filter_by(family_id=id).all()
     works = Work.query.order_by(Work.name).all()
-    return render_template('edit_family.html', family=family, members=members, works=works)
+    cities = City.query.order_by(City.name).all()
+    return render_template('edit_family.html', family=family, members=members, works=works, cities=cities)
 
 @app.route('/admin/delete_family/<int:id>')
 def delete_family(id):
@@ -611,32 +676,6 @@ def add_notice():
     except Exception as e:
         db.session.rollback()
         return f"Error: {str(e)}", 500
-
-
-@app.route("/led")
-def led():
-    return render_template("led.html", state=led_state)
-
-
-@app.route("/set-led", methods=["POST"])
-def set_led():
-    global led_state
-
-    data = request.get_json()
-    led_state = data["state"]
-
-    return jsonify({
-        "success": True,
-        "led": led_state
-    })
-
-
-@app.route("/get-led")
-def get_led():
-    return jsonify({
-        "led": led_state
-    })
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
