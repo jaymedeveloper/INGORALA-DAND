@@ -1,78 +1,298 @@
 <!DOCTYPE html>
 <html lang="gu">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>એડમિન - ઈંગોરાળા</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:Arial;background:#f0f2f5;padding:16px;}
-        .container{max-width:800px;margin:auto;}
-        .card{background:white;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
-        h2{color:#1e6f2f;margin-bottom:5px;}
-        h3{color:#1e6f2f;margin:20px 0 15px;border-bottom:2px solid #ff9800;padding-bottom:8px;}
-        .stats{display:flex;gap:15px;margin:20px 0;flex-wrap:wrap;}
-        .stat-box{background:#e8f5e9;flex:1;padding:15px;border-radius:12px;text-align:center;}
-        .stat-num{font-size:28px;font-weight:bold;color:#1e6f2f;}
-        
-        .form-group{margin-bottom:15px;}
-        label{display:block;margin-bottom:5px;font-weight:bold;color:#333;}
-        input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;}
-        textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;resize:vertical;}
-        button{background:#1e6f2f;color:white;padding:12px 25px;border:none;border-radius:12px;cursor:pointer;font-size:16px;}
-        .btn-danger{background:#d32f2f;}
-        .btn-warning{background:#ff9800;}
-        .member-row{background:#f8f9fa;padding:15px;margin:10px 0;border-radius:10px;}
-        .remove-member{background:#d32f2f;color:white;border:none;padding:5px 12px;border-radius:15px;cursor:pointer;margin-top:8px;}
-        .add-btn{background:#ff9800;margin:10px 0;}
-        hr{margin:25px 0;}
-        
-        .family-table{width:100%;border-collapse:collapse;}
-        .family-table tr{border-bottom:1px solid #eee;}
-        .family-table td{padding:12px 8px;vertical-align:middle;}
-        .family-table .actions{white-space:nowrap;}
-        .edit-link{background:#ff9800;color:white;padding:5px 12px;border-radius:15px;text-decoration:none;font-size:12px;margin-right:5px;display:inline-block;}
-        .delete-link{background:#d32f2f;color:white;padding:5px 12px;border-radius:15px;text-decoration:none;font-size:12px;display:inline-block;}
-        
-        .required{color:red;}
-        .other-work-input{display:none;margin-top:5px;}
-        .other-work-input input{background:#fff3cd;border-color:#ff9800;}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
-        
-        .admin-info{background:#e8f5e9;padding:12px 15px;border-radius:10px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
-        .super-link{background:#ff9800;color:white;padding:5px 12px;border-radius:15px;text-decoration:none;font-size:12px;}
-        
-        .notice-table{width:100%;border-collapse:collapse;}
-        .notice-table tr{border-bottom:1px solid #eee;}
-        .notice-table th, .notice-table td{padding:10px 8px;text-align:left;vertical-align:top;}
-        .notice-table th{background:#f8f9fa;font-weight:bold;}
-        .notice-title{font-weight:bold;color:#1e6f2f;}
-        .notice-content{font-size:13px;color:#555;margin-top:3px;}
-        .notice-admin{font-size:12px;color:#ff9800;}
-        .notice-date{font-size:11px;color:#999;}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial;
+            background: #f0f2f5;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #1e6f2f;
+            margin-bottom: 5px;
+        }
+
+        h3 {
+            color: #1e6f2f;
+            margin: 20px 0 15px;
+            border-bottom: 2px solid #ff9800;
+            padding-bottom: 8px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: #e8f5e9;
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e6f2f;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        button {
+            background: #1e6f2f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-danger {
+            background: #d32f2f;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+        }
+
+        .member-row {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+
+        .remove-member {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .add-btn {
+            background: #ff9800;
+            margin: 10px 0;
+        }
+
+        hr {
+            margin: 25px 0;
+        }
+
+        .family-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .family-table tr {
+            border-bottom: 1px solid #eee;
+        }
+
+        .family-table td {
+            padding: 12px 8px;
+            vertical-align: middle;
+        }
+
+        .family-table .actions {
+            white-space: nowrap;
+        }
+
+        .edit-link {
+            background: #ff9800;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-size: 12px;
+            margin-right: 5px;
+            display: inline-block;
+        }
+
+        .delete-link {
+            background: #d32f2f;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .required {
+            color: red;
+        }
+
+        .other-work-input {
+            display: none;
+            margin-top: 5px;
+        }
+
+        .other-work-input input {
+            background: #fff3cd;
+            border-color: #ff9800;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .admin-info {
+            background: #e8f5e9;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .super-link {
+            background: #ff9800;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .notice-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .notice-table tr {
+            border-bottom: 1px solid #eee;
+        }
+
+        .notice-table th,
+        .notice-table td {
+            padding: 10px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .notice-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .notice-title {
+            font-weight: bold;
+            color: #1e6f2f;
+        }
+
+        .notice-content {
+            font-size: 13px;
+            color: #555;
+            margin-top: 3px;
+        }
+
+        .notice-admin {
+            font-size: 12px;
+            color: #ff9800;
+        }
+
+        .notice-date {
+            font-size: 11px;
+            color: #999;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="card">
             <h2>🏘️ ઈંગોરાળા - એડમિન પેનલ</h2>
             <p>નવો પરિવાર અથવા સમાચાર ઉમેરો</p>
-            
+
             <div class="admin-info">
                 <span>👤 આપનું નામ: <strong>{{ admin_name }}</strong></span>
                 <span>📞 {{ admin_mobile }}</span>
                 {% if admin_mobile == 'admin' %}
                 <a href="/superadmin/admins" class="super-link">👑 સુપર એડમિન પેનલ</a>
                 {% endif %}
-                <a href="/admin/logout" style="background:#d32f2f;color:white;padding:5px 12px;border-radius:15px;text-decoration:none;font-size:12px;">🚪 લોગઆઉટ</a>
+                <a href="/admin/logout"
+                    style="background:#d32f2f;color:white;padding:5px 12px;border-radius:15px;text-decoration:none;font-size:12px;">🚪
+                    લોગઆઉટ</a>
             </div>
 
             <div class="stats">
-                <div class="stat-box"><div class="stat-num">{{ total_families }}</div><div>મારા પરિવારો</div></div>
-                <div class="stat-box"><div class="stat-num">{{ total_members }}</div><div>મારા સભ્યો</div></div>
-                <div class="stat-box"><div class="stat-num">{{ total_businesses }}</div><div>કુલ દુકાનો</div></div>
+                <div class="stat-box">
+                    <div class="stat-num">{{ total_families }}</div>
+                    <div>મારા પરિવારો</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num">{{ total_members }}</div>
+                    <div>મારા સભ્યો</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num">{{ total_businesses }}</div>
+                    <div>કુલ દુકાનો</div>
+                </div>
             </div>
-            
+
             <!-- ===== MY FAMILIES LIST WITH EDIT/DELETE ===== -->
             <h3>📋 મારા પરિવારો</h3>
             <table class="family-table">
@@ -84,14 +304,18 @@
                     </td>
                     <td class="actions">
                         <a href="/admin/edit_family/{{ family.id }}" class="edit-link">✏️ એડિટ</a>
-                        <a href="/admin/delete_family/{{ family.id }}" class="delete-link" onclick="return confirm('આ પરિવાર ડિલીટ કરવો છે?')">🗑️ ડિલીટ</a>
+                        <a href="/admin/delete_family/{{ family.id }}" class="delete-link"
+                            onclick="return confirm('આ પરિવાર ડિલીટ કરવો છે?')">🗑️ ડિલીટ</a>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="2" style="text-align:center;padding:30px;">❌ તમે હજુ કોઈ પરિવાર ઉમેર્યો નથી</td></tr>
+                <tr>
+                    <td colspan="2" style="text-align:center;padding:30px;">❌ તમે હજુ કોઈ પરિવાર ઉમેર્યો નથી</td>
+                </tr>
                 {% endfor %}
             </table>
-            
+
+            <!-- ===== ADD FAMILY FORM ===== -->
             <!-- ===== ADD FAMILY FORM ===== -->
             <h3 style="margin-top:30px;">➕ નવો પરિવાર ઉમેરો</h3>
             <form id="familyForm" action="/admin/add_family" method="POST">
@@ -112,6 +336,26 @@
                     <input type="text" name="address" placeholder="મુખ્ય માર્ગ, મંદિર પાસે, ઈંગોરાળા">
                 </div>
 
+                <!-- 👇 CITY DROPDOWN WITH "અન્ય" OPTION -->
+                <div class="form-group">
+                    <label>🏙️ શહેર / ગામ</label>
+                    <select name="city" id="citySelect" onchange="toggleOtherCity()">
+                        <option value="">-- શહેર પસંદ કરો --</option>
+                        {% for city in cities %}
+                        <option value="{{ city.name }}">{{ city.name }}</option>
+                        {% endfor %}
+                        <option value="અન્ય">📌 અન્ય (નવું શહેર લખો)</option>
+                    </select>
+                    <div id="otherCityDiv" style="display:none; margin-top:10px;">
+                        <input type="text" name="city_other" id="cityOther" class="city-other"
+                            placeholder="નવું શહેરનું નામ લખો..."
+                            style="background:#fff3cd; border-color:#ff9800; width:100%; padding:12px; border-radius:10px;">
+                        <small style="color:#666; display:block; margin-top:5px;">✏️ નવું શહેર લખો, તે આપોઆપ સેવ
+                            થશે</small>
+                    </div>
+                </div>
+
+                <!-- Rest of the form -->
                 <div id="membersContainer">
                     <div class="member-row" data-index="0">
                         <input type="text" name="member_name_0" placeholder="નામ *" required>
@@ -129,8 +373,6 @@
                             <option value="દીકરો">દીકરો</option>
                             <option value="દીકરી">દીકરી</option>
                         </select>
-
-                        <!-- DYNAMIC WORK DROPDOWN FROM DATABASE -->
                         <select name="member_work_0" class="work-select" onchange="toggleOtherWork(this)">
                             <option value="" hidden>-- કામ --</option>
                             {% for work in works %}
@@ -138,11 +380,11 @@
                             {% endfor %}
                             <option value="અન્ય">📌 અન્ય (પોતાનું લખો)</option>
                         </select>
-                        <div class="other-work-input" id="other_work_0">
+                        <div class="other-work-input" id="other_work_0" style="display:none;">
                             <input type="text" name="member_work_other_0" placeholder="તમારું કામ લખો...">
                         </div>
-
-                        <button type="button" class="remove-member" onclick="removeMember(this)" style="display:none;">❌ દૂર કરો</button>
+                        <button type="button" class="remove-member" onclick="removeMember(this)" style="display:none;">❌
+                            દૂર કરો</button>
                     </div>
                 </div>
                 <button type="button" class="add-btn" onclick="addMember()">➕ નવો સભ્ય</button>
@@ -151,7 +393,9 @@
                 <br><br>
                 <button type="submit" onclick="prepareSubmit()">💾 પરિવાર સેવ કરો</button>
             </form>
-            
+
+
+
             <!-- ===== ADD NOTICE FORM ===== -->
             <h3 style="margin-top:30px;">📢 નવો સમાચાર ઉમેરો</h3>
             <form action="/admin/add_notice" method="POST">
@@ -165,7 +409,7 @@
                 </div>
                 <button type="submit">➕ સમાચાર ઉમેરો</button>
             </form>
-            
+
             <!-- ===== RECENT NOTICES LIST WITH ADMIN NAME ===== -->
             <h3 style="margin-top:30px;">📋 તાજેતરના સમાચાર</h3>
             <table class="notice-table">
@@ -181,7 +425,8 @@
                     <tr>
                         <td>
                             <div class="notice-title">{{ notice.title }}</div>
-                            <div class="notice-content">{{ notice.content[:80] }}{% if notice.content|length > 80 %}...{% endif %}</div>
+                            <div class="notice-content">{{ notice.content[:80] }}{% if notice.content|length > 80
+                                %}...{% endif %}</div>
                         </td>
                         <td class="notice-admin">
                             👤 {{ notice.admin_name or 'અજ્ઞાત' }}
@@ -198,13 +443,48 @@
                     {% endfor %}
                 </tbody>
             </table>
-            
+
             <hr>
             <a href="/"><button type="button" style="background:#555;">🏠 હોમપેજ</button></a>
         </div>
     </div>
 
     <script>
+
+
+
+        // ===== TOGGLE OTHER CITY FIELD =====
+        function toggleOtherCity() {
+            const select = document.getElementById('citySelect');
+            const otherDiv = document.getElementById('otherCityDiv');
+            if (select.value === 'અન્ય') {
+                otherDiv.style.display = 'block';
+                document.getElementById('cityOther').focus();
+            } else {
+                otherDiv.style.display = 'none';
+            }
+        }
+
+        // Handle form submission for city
+        const familyForm = document.getElementById('familyForm');
+        if (familyForm) {
+            familyForm.addEventListener('submit', function (e) {
+                const citySelect = document.getElementById('citySelect');
+                const cityOther = document.getElementById('cityOther');
+
+                if (citySelect && citySelect.value === 'અન્ય' && cityOther && cityOther.value.trim() !== '') {
+                    // Disable select so it doesn't submit
+                    citySelect.disabled = true;
+                    // The city_other value will be sent as 'city_other'
+                    // We'll handle it in app.py
+                }
+            });
+        }
+
+        // Rest of your existing JavaScript functions (addMember, removeMember, prepareSubmit, toggleOtherWork, etc.)
+
+
+
         let memberIndex = 1;
 
         function toggleOtherWork(selectElement) {
@@ -271,7 +551,7 @@
                             work = otherWork;
                         }
                     }
-                    
+
                     members.push({
                         name: name,
                         dob: row.querySelector('input[name^="member_dob_"]')?.value || '',
@@ -292,4 +572,5 @@
         }
     </script>
 </body>
+
 </html>
