@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>પરિવાર માહિતી ફોર્મ - ઈંગોરાળા</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #e0e0e0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* A4 SIZE - PORTRAIT ONLY */
+        .form-container {
+            max-width: 210mm;
+            width: 210mm;
+            background: white;
+            margin: 0 auto;
+            padding: 10mm 12mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* PRINT STYLES - FORCED PORTRAIT */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm;
+            }
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .form-container {
+                max-width: 100%;
+                width: 100%;
+                padding: 5mm 8mm;
+                box-shadow: none;
+                margin: 0;
+            }
+            .no-print {
+                display: none;
+            }
+            .member-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .page1-end {
+                page-break-after: always;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e6f2f;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid #ff9800;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e6f2f;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 3px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 5px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 2px;
+            color: #333;
+            font-size: 11px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 5px 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        input[readonly] {
+            background: #f0f0f0;
+        }
+
+        .member-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 7px;
+            margin-bottom: 6px;
+        }
+
+        .member-title {
+            font-weight: bold;
+            background: #e8f5e9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            color: #1e6f2f;
+            font-size: 11px;
+        }
+
+        .radio-group, .checkbox-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 2px;
+        }
+
+        .radio-group label, .checkbox-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: normal;
+            font-size: 11px;
+        }
+
+        .radio-group input[type="radio"],
+        .checkbox-group input[type="checkbox"] {
+            width: 13px;
+            height: 13px;
+            margin: 0;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 5px 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 11px;
+            resize: vertical;
+            height: 45px;
+        }
+
+        .print-btn {
+            background: #1e6f2f;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .instruction {
+            background: #fff3cd;
+            border: 1px solid #ffe0a3;
+            border-radius: 5px;
+            padding: 6px 10px;
+            margin-bottom: 8px;
+        }
+
+        .instruction h3 {
+            color: #e65100;
+            margin-bottom: 4px;
+            font-size: 11px;
+        }
+
+        .instruction p {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            margin-top: 8px;
+            padding-top: 5px;
+            border-top: 1px solid #eee;
+        }
+
+        .page1-end {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <!-- ========== PAGE 1 ========== -->
+        <div class="page1">
+            <h1>🏘️ ઈંગોરાળા ગામ</h1>
+            <div class="subtitle">પરિવાર માહિતી સંગ્રહ ફોર્મ (પાનું 1/2)</div>
+
+            <div class="instruction">
+                <h3>📋 સૂચનાઓ</h3>
+                <p>1. દરેક પરિવાર માટે એક અલગ ફોર્મ | 2. બધી માહિતી સાચી ભરો | 3. ફોર્મ એડમિનને સોંપો</p>
+            </div>
+
+            <!-- FAMILY DETAILS -->
+            <div class="section">
+                <div class="section-title">📋 પરિવારની માહિતી</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🏷️ અટક (Surname) *</label>
+                        <input type="text" >
+                    </div>
+                    <div class="form-group">
+                        <label>👨‍👩‍👧‍👦 મુખ્ય વ્યક્તિનું નામ *</label>
+                        <input type="text">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📞 કુટુંબ સંપર્ક</label>
+                        <input type="text" >
+                    </div>
+                    <div class="form-group">
+                        <label>🏙️ શહેર / ગામ</label>
+                        <input type="text" >
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>🏡 સરનામું</label>
+                    <input type="text">
+                </div>
+            </div>
+
+            <!-- MEMBER 1, 2, 3 -->
+            <div class="section">
+                <div class="section-title">👨‍👩‍👧‍👦 પરિવારના સભ્યો</div>
+                
+                <!-- Member 1 -->
+                <div class="member-card">
+                    <div class="member-title">સભ્ય 1 (મુખ્ય વ્યક્તિ)</div>
+                    <div class="form-row">
+                        <div class="form-group"><label>નામ *</label><input type="text" ></div>
+                        <div class="form-group"><label>જન્મ તારીખ</label><input type="text" ></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>લિંગ</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="g1"> પુરુષ</label>
+                                <label><input type="radio" name="g1"> સ્ત્રી</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>સંબંધ</label>
+                            <input type="text" value="મુખ્ય વ્યક્તિ" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>વ્યવસાય / કામ</label><input type="text" ></div>
+                        <div class="form-group"><label>📞 વ્યક્તિગત સંપર્ક</label><input type="text" ></div>
+                    </div>
+                </div>
+
+                <!-- Member 2 -->
+                <div class="member-card">
+                    <div class="member-title">સભ્ય 2</div>
+                    <div class="form-row">
+                        <div class="form-group"><label>નામ</label><input type="text" ></div>
+                        <div class="form-group"><label>જન્મ તારીખ</label><input type="text" ></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>લિંગ</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="g2"> પુરુષ</label>
+                                <label><input type="radio" name="g2"> સ્ત્રી</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>સંબંધ</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox"> દીકરો</label>
+                                <label><input type="checkbox"> દીકરી</label>
+                                <label><input type="checkbox"> પત્ની</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>વ્યવસાય / કામ</label><input type="text" ></div>
+                        <div class="form-group"><label>📞 વ્યક્તિગત સંપર્ક</label><input type="text" ></div>
+                    </div>
+                </div>
+
+                <!-- Member 3 -->
+                <div class="member-card">
+                    <div class="member-title">સભ્ય 3</div>
+                    <div class="form-row">
+                        <div class="form-group"><label>નામ</label><input type="text" ></div>
+                        <div class="form-group"><label>જન્મ તારીખ</label><input type="text" ></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>લિંગ</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="g3"> પુરુષ</label>
+                                <label><input type="radio" name="g3"> સ્ત્રી</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>સંબંધ</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox"> દીકરો</label>
+                                <label><input type="checkbox"> દીકરી</label>
+                                <label><input type="checkbox"> પત્ની</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>વ્યવસાય / કામ</label><input type="text" ></div>
+                        <div class="form-group"><label>📞 વ્યક્તિગત સંપર્ક</label><input type="text" ></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE BREAK -->
+        <div class="page1-end"></div>
+
+        <!-- ========== PAGE 2 ========== -->
+        <div class="page2">
+            <div class="subtitle">પરિવાર માહિતી સંગ્રહ ફોર્મ (પાનું 2/2)</div>
+
+            <div class="section">
+                <div class="section-title">👨‍👩‍👧‍👦 પરિવારના સભ્યો (ચાલુ)</div>
+
+                <!-- Member 4 -->
+                <div class="member-card">
+                    <div class="member-title">સભ્ય 4</div>
+                    <div class="form-row">
+                        <div class="form-group"><label>નામ</label><input type="text" ></div>
+                        <div class="form-group"><label>જન્મ તારીખ</label><input type="text" ></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>લિંગ</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="g4"> પુરુષ</label>
+                                <label><input type="radio" name="g4"> સ્ત્રી</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>સંબંધ</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox"> દીકરો</label>
+                                <label><input type="checkbox"> દીકરી</label>
+                                <label><input type="checkbox"> પત્ની</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>વ્યવસાય / કામ</label><input type="text" ></div>
+                        <div class="form-group"><label>📞 વ્યક્તિગત સંપર્ક</label><input type="text" ></div>
+                    </div>
+                </div>
+
+                <!-- Member 5 -->
+                <div class="member-card">
+                    <div class="member-title">સભ્ય 5</div>
+                    <div class="form-row">
+                        <div class="form-group"><label>નામ</label><input type="text" ></div>
+                        <div class="form-group"><label>જન્મ તારીખ</label><input type="text" ></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>લિંગ</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="g5"> પુરુષ</label>
+                                <label><input type="radio" name="g5"> સ્ત્રી</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>સંબંધ</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox"> દીકરો</label>
+                                <label><input type="checkbox"> દીકરી</label>
+                                <label><input type="checkbox"> પત્ની</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>વ્યવસાય / કામ</label><input type="text" ></div>
+                        <div class="form-group"><label>📞 વ્યક્તિગત સંપર્ક</label><input type="text" ></div>
+                    </div>
+                </div>
+
+                <!-- Member 6 -->
+                <div class="member-card">
+                    <div class="member-title">સભ્ય 6</div>
+                    <div class="form-row">
+                        <div class="form-group"><label>નામ</label><input type="text" ></div>
+                        <div class="form-group"><label>જન્મ તારીખ</label><input type="text" ></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>લિંગ</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="g6"> પુરુષ</label>
+                                <label><input type="radio" name="g6"> સ્ત્રી</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>સંબંધ</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox"> દીકરો</label>
+                                <label><input type="checkbox"> દીકરી</label>
+                                <label><input type="checkbox"> પત્ની</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>વ્યવસાય / કામ</label><input type="text" ></div>
+                        <div class="form-group"><label>📞 વ્યક્તિગત સંપર્ક</label><input type="text" ></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REMARKS -->
+            <div class="section">
+                <div class="section-title">📝 વિશેષ માહિતી / સૂચન</div>
+                <textarea rows="2" ></textarea>
+            </div>
+
+            <div class="footer-note">
+                <p>📌 નોંધ: ફોર્મ ભર્યા પછી ગ્રામ પંચાયત કચેરી / એડમિનને સોંપો | 📞 સંપર્ક: 96242 12311</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 10px;">
+                <button type="button" class="print-btn no-print" onclick="window.print()">🖨️ પ્રિન્ટ કરો</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
