@@ -8,9 +8,22 @@
         *{margin:0;padding:0;box-sizing:border-box;}
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f0f2f5;padding:16px;}
         .container{max-width:600px;margin:0 auto;background:white;border-radius:24px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+        
+        /* Hero Section */
         .hero{background:linear-gradient(135deg,#1e6f2f 0%,#2e8b3e 100%);color:white;padding:32px 24px;text-align:center;}
         .hero h1{font-size:32px;margin-bottom:8px;}
         .hero p{font-size:14px;opacity:0.9;margin-bottom:16px;}
+        
+        /* Weather Widget */
+        .weather-widget{background:rgba(255,255,255,0.15);border-radius:16px;padding:12px 16px;margin-top:15px;text-align:center;}
+        .weather-temp{font-size:32px;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:10px;}
+        .weather-emoji{font-size:48px;}
+        .weather-desc{font-size:13px;margin:5px 0;text-transform:capitalize;}
+        .weather-details{display:flex;justify-content:center;gap:20px;margin-top:8px;font-size:11px;}
+        .weather-details span{display:flex;align-items:center;gap:5px;}
+        .weather-error{font-size:12px;padding:8px;}
+        .refresh-weather{background:rgba(255,255,255,0.2);border:none;color:white;padding:4px 10px;border-radius:20px;font-size:10px;cursor:pointer;margin-top:5px;}
+        
         .stats-bar{display:flex;justify-content:space-around;background:rgba(255,255,255,0.15);border-radius:16px;padding:12px;margin-top:16px;}
         .stat{text-align:center;}
         .stat-number{font-size:22px;font-weight:bold;}
@@ -32,13 +45,14 @@
         .important-numbers h3{color:#1565c0;margin-bottom:12px;font-size:18px;}
         .contact-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #bbdef5;}
         
-        .footer{background:#1a472a;color:#ccc;text-align:center;padding:20px;font-size:12px;}
         .developer-box{background:#2e7d32;margin:0 20px 20px;padding:15px;border-radius:16px;text-align:center;}
         .developer-box h4{color:#ff9800;margin-bottom:8px;font-size:14px;}
         .developer-name{color:white;font-weight:bold;font-size:16px;margin-bottom:5px;}
         .whatsapp-link{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:8px 20px;border-radius:30px;text-decoration:none;font-size:14px;font-weight:bold;margin-top:8px;transition:all 0.2s;}
         .whatsapp-link:hover{background:#128C7E;transform:scale(1.02);}
         .contact-note{font-size:10px;color:#ccc;margin-top:10px;}
+        
+        .footer{background:#1a472a;color:#ccc;text-align:center;padding:20px;font-size:12px;}
     </style>
 </head>
 <body>
@@ -46,6 +60,22 @@
         <div class="hero">
             <h1>🏘️ ઈંગોરાળા</h1>
             <p>જિલ્લો: અમરેલી | તાલુકો: લીલીયા</p>
+            
+            <!-- Weather Widget -->
+            <div class="weather-widget" id="weatherWidget">
+                <div class="weather-temp" id="weatherTemp">
+                    <span class="weather-emoji">🌤️</span>
+                    <span id="tempValue">--°C</span>
+                </div>
+                <div class="weather-desc" id="weatherDesc">હવામાન માહિતી મેળવાઈ રહી છે...</div>
+                <div class="weather-details" id="weatherDetails">
+                    <span>💧 --%</span>
+                    <span>💨 -- km/h</span>
+                    <span>🌡️ --°C</span>
+                </div>
+                <button class="refresh-weather" onclick="fetchWeather()">⟳ અપડેટ કરો</button>
+            </div>
+            
             <div class="stats-bar">
                 <div class="stat"><div class="stat-number">{{ total_families }}</div><div class="stat-label">પરિવારો</div></div>
                 <div class="stat"><div class="stat-number">{{ total_members }}</div><div class="stat-label">સભ્યો</div></div>
@@ -58,6 +88,7 @@
             <a href="/works" class="menu-card"><span class="emoji">💼</span><span>વ્યવસાયો</span></a>
             <a href="/businesses" class="menu-card"><span class="emoji">🏪</span><span>દુકાનો</span></a>
             <a href="/gallery" class="menu-card"><span class="emoji">🖼️</span><span>ગેલેરી</span></a>
+            <a href="/family-form" class="menu-card"><span class="emoji">📝</span><span>ફોર્મ ડાઉનલોડ</span></a>
             <a href="/admin/login" class="menu-card"><span class="emoji">🔧</span><span>વ્યવસ્થાપક</span></a>
         </div>
 
@@ -86,7 +117,6 @@
             <div class="contact-row"><span>🚑 108 એમ્બ્યુલન્સ</span><span>108</span></div>
         </div>
 
-        <!-- ===== DEVELOPER CONTACT SECTION ===== -->
         <div class="developer-box">
             <h4>💻 વેબસાઈટ વિશે માહિતી</h4>
             <div class="developer-name">👨‍💻 ભલાણી જયનીલ</div>
@@ -104,5 +134,95 @@
             <p>© 2026 ઈંગોરાળા ગ્રામ પંચાયત</p>
         </div>
     </div>
+
+    <script>
+        // Function to get weather emoji based on condition and temperature
+        function getWeatherEmoji(description, temp) {
+            const desc = description.toLowerCase();
+            
+            // Thunderstorm
+            if (desc.includes('thunderstorm') || desc.includes('lightning')) return '⛈️';
+            
+            // Rain
+            if (desc.includes('rain') || desc.includes('drizzle') || desc.includes('shower')) {
+                if (desc.includes('heavy')) return '🌧️';
+                if (desc.includes('light')) return '🌦️';
+                return '🌧️';
+            }
+            
+            // Snow
+            if (desc.includes('snow') || desc.includes('sleet')) return '❄️';
+            
+            // Fog/Mist/Haze
+            if (desc.includes('fog') || desc.includes('mist') || desc.includes('haze') || desc.includes('smoke')) return '🌫️';
+            
+            // Clouds
+            if (desc.includes('cloud')) {
+                if (desc.includes('few') || desc.includes('scattered')) return '⛅';
+                if (desc.includes('broken') || desc.includes('overcast')) return '☁️';
+                return '☁️';
+            }
+            
+            // Clear sky - based on temperature
+            if (desc.includes('clear') || desc.includes('sun')) {
+                if (temp > 35) return '🥵';
+                if (temp > 30) return '☀️';
+                if (temp < 20) return '☀️';
+                return '🌞';
+            }
+            
+            // Default
+            return '🌤️';
+        }
+
+        async function fetchWeather() {
+            const weatherEmojiSpan = document.querySelector('.weather-emoji');
+            const tempSpan = document.getElementById('tempValue');
+            const descSpan = document.getElementById('weatherDesc');
+            const detailsSpan = document.getElementById('weatherDetails');
+            
+            try {
+                const response = await fetch('/api/weather');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                const temp = data.temp;
+                const description = data.description;
+                
+                // Update emoji based on weather
+                const emoji = getWeatherEmoji(description, temp);
+                weatherEmojiSpan.innerHTML = emoji;
+                
+                // Update temperature
+                tempSpan.innerHTML = `${temp}°C`;
+                
+                // Update description
+                descSpan.innerHTML = description;
+                
+                // Update details
+                detailsSpan.innerHTML = `
+                    <span>💧 ${data.humidity}%</span>
+                    <span>💨 ${data.wind_speed} km/h</span>
+                    <span>🌡️ ${data.feels_like}°C</span>
+                `;
+                
+            } catch (error) {
+                console.error('Weather fetch error:', error);
+                weatherEmojiSpan.innerHTML = '⚠️';
+                tempSpan.innerHTML = '--°C';
+                descSpan.innerHTML = 'હવામાન માહિતી મેળવી શકાઈ નહીં';
+                detailsSpan.innerHTML = '<span>💧 --%</span><span>💨 -- km/h</span><span>🌡️ --°C</span>';
+            }
+        }
+        
+        // Fetch weather on page load
+        fetchWeather();
+        
+        // Refresh every 10 minutes (600000 ms)
+        setInterval(fetchWeather, 600000);
+    </script>
 </body>
 </html>
