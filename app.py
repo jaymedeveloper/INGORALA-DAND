@@ -4,6 +4,7 @@ from datetime import datetime, date, timedelta
 import json
 import os
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
 
@@ -676,6 +677,42 @@ def add_notice():
     except Exception as e:
         db.session.rollback()
         return f"Error: {str(e)}", 500
+
+@app.route('/family-form')
+def family_form():
+    """Printable family data collection form"""
+    return render_template('family_form.html')
+
+
+
+# ========== WEATHER API CONFIGURATION ==========
+WEATHER_API_KEY = os.getenv('WEATHER_API_KEY', 'ea6e04b13cf844a04310cf4ef1dd8925')
+INGORALA_LAT = 21.448665
+INGORALA_LON = 71.505525
+
+@app.route('/api/weather')
+def get_weather():
+    """Get current weather for Ingorala village"""
+    try:
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={INGORALA_LAT}&lon={INGORALA_LON}&appid={WEATHER_API_KEY}&units=metric&lang=gu"
+        response = requests.get(url)
+        data = response.json()
+        
+        if response.status_code == 200:
+            weather_data = {
+                'temp': round(data['main']['temp']),
+                'feels_like': round(data['main']['feels_like']),
+                'humidity': data['main']['humidity'],
+                'description': data['weather'][0]['description'],
+                'icon': data['weather'][0]['icon'],
+                'wind_speed': data['wind']['speed'],
+                'city': data.get('name', 'ઈંગોરાળા')
+            }
+            return jsonify(weather_data)
+        else:
+            return jsonify({'error': 'Unable to fetch weather'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
